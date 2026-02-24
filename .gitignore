@@ -1,0 +1,31 @@
+# ============================================================
+# BiasedCodebookExp_v2 .gitignore
+# ============================================================
+
+# --- Trained model weights (reproducible via pipeline) ---
+codebooks/
+classifiers/
+
+# --- Data splits (reproducible with GLOBAL_SEED from constants.py) ---
+data/splits/
+
+# --- Evaluation intermediate results (large, reproducible) ---
+results/
+# Exception: keep final paper figures/tables
+!results/paper_figures_rq/
+
+# --- SLURM job logs ---
+paper_pipeline/slurm/logs/
+
+# --- Python bytecode ---
+__pycache__/
+*.py[cod]
+
+# --- User-specific config (contains local paths) ---
+local_config.sh
+
+# --- OS / editor artifacts ---
+.DS_Store
+*.swp
+*.swo
+*~

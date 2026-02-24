@@ -1,0 +1,28 @@
+# ============================================================
+# BiasedCodebookExp_v2 -- Python Dependencies
+#
+# Install:
+#   1. PyTorch + torchaudio (special index URL, handled by setup_env.sh)
+#   2. pip install -r requirements.txt
+#
+# Or just run:  bash setup_env.sh
+# ============================================================
+
+# --- Core ML ---
+numpy>=1.23,<2.0
+scikit-learn>=1.2
+tqdm>=4.60
+
+# --- Audio processing ---
+funasr>=1.2.7
+soundfile>=0.12
+
+# --- SSL feature extraction (HuBERT, WavLM) ---
+s3prl>=0.4.17
+
+# --- Vector quantization (lucidrains/vector-quantize-pytorch) ---
+vector-quantize-pytorch>=1.14
+einops>=0.6
+
+# --- Visualization (paper figure generation) ---
+matplotlib>=3.7

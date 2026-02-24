@@ -1,0 +1,22 @@
+#!/bin/bash
+# ============================================================
+# Local configuration template for the paper pipeline.
+# Copy this file to local_config.sh and edit the values below.
+#
+#   cp local_config.sh.template local_config.sh
+#
+# local_config.sh is sourced by env.sh and should NOT be
+# committed to version control.
+# ============================================================
+
+# Path to Python virtual environment
+# export VENV_PATH="/path/to/your/venvs/vevo-source-fix"
+
+# Root directory for all datasets
+# export DATA_ROOT="/path/to/your/data"
+
+# Path to emotion2vec model weights
+# export E2V_MODEL_PATH="/path/to/emotion2vec_plus_base/model.pt"
+
+# Directory for SLURM job logs
+# export LOG_DIR="/path/to/logs"
