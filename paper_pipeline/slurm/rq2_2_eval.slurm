@@ -7,8 +7,8 @@
 #SBATCH --mem=32G
 #SBATCH --gres=gpu:1
 #SBATCH --time=04:00:00
-#SBATCH --output=BiasedCodebookExp_v2/paper_pipeline/slurm/logs/rq22_eval_%A_%a.out
-#SBATCH --error=BiasedCodebookExp_v2/paper_pipeline/slurm/logs/rq22_eval_%A_%a.err
+#SBATCH --output=paper_pipeline/slurm/logs/rq22_eval_%A_%a.out
+#SBATCH --error=paper_pipeline/slurm/logs/rq22_eval_%A_%a.err
 
 # ==============================================================
 # RQ2.2 Evaluation: L2 + SER-F1 for 3 SSL models (128x8)
@@ -22,7 +22,7 @@
 # Usage: sbatch --array=0-47 rq2_2_eval.slurm
 # ==============================================================
 
-source "${SLURM_SUBMIT_DIR}/BiasedCodebookExp_v2/paper_pipeline/slurm/env.sh"
+source "$(dirname "$0")/env.sh"
 
 SSLS=(e2v hubert wavlm)
 DATASETS=(esd_en iemocap ravdess cremad)

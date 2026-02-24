@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=rq31_eval
+#SBATCH --job-name=rq3_1_eval
 #SBATCH --partition=gpu-a100-mig
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
@@ -7,8 +7,8 @@
 #SBATCH --mem=32G
 #SBATCH --gres=gpu:1
 #SBATCH --time=10:00:00
-#SBATCH --output=BiasedCodebookExp_v2/paper_pipeline/slurm/logs/rq31_eval_%A_%a.out
-#SBATCH --error=BiasedCodebookExp_v2/paper_pipeline/slurm/logs/rq31_eval_%A_%a.err
+#SBATCH --output=paper_pipeline/slurm/logs/rq3_1_eval_%A_%a.out
+#SBATCH --error=paper_pipeline/slurm/logs/rq3_1_eval_%A_%a.err
 
 # ==============================================================
 # RQ3.1: Evaluate ratio codebooks (all 10 types, per-layer)
@@ -24,7 +24,7 @@
 # Usage: sbatch --array=0-35 rq3_1_eval.slurm
 # ==============================================================
 
-source "${SLURM_SUBMIT_DIR}/BiasedCodebookExp_v2/paper_pipeline/slurm/env.sh"
+source "$(dirname "$0")/env.sh"
 set -e
 
 TASK_ID=${SLURM_ARRAY_TASK_ID}

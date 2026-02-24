@@ -7,9 +7,9 @@
 #   2. GPU sample-level evaluation for ALL 10 ratios (36 array tasks)
 #
 # Usage:
-#   bash submit_rq31_extended.sh               # full pipeline
-#   bash submit_rq31_extended.sh --skip-train   # skip training
-#   bash submit_rq31_extended.sh --dry-run
+#   bash submit_rq3_1_extended.sh               # full pipeline
+#   bash submit_rq3_1_extended.sh --skip-train   # skip training
+#   bash submit_rq3_1_extended.sh --dry-run
 # =================================================================
 
 set -euo pipefail
@@ -46,7 +46,7 @@ if $SKIP_TRAIN; then
     TRAIN_JID=""
 else
     echo "=== Stage 1: Train 5 new ratios (240 tasks) ==="
-    TRAIN_JID=$(submit sbatch "${SCRIPT_DIR}/train_rq31_new_ratios.slurm")
+    TRAIN_JID=$(submit sbatch "${SCRIPT_DIR}/train_rq3_1_new_ratios.slurm")
     echo "  Submitted training job: ${TRAIN_JID}"
 fi
 
@@ -56,7 +56,7 @@ DEP_ARG=""
 if [ -n "${TRAIN_JID:-}" ] && [ "${TRAIN_JID}" != "DRY_JOB_ID" ]; then
     DEP_ARG="--dependency=afterok:${TRAIN_JID}"
 fi
-EVAL_JID=$(submit sbatch ${DEP_ARG} "${SCRIPT_DIR}/rq31_sample_eval.slurm")
+EVAL_JID=$(submit sbatch ${DEP_ARG} "${SCRIPT_DIR}/rq3_1_sample_eval.slurm")
 echo "  Submitted eval job: ${EVAL_JID}"
 
 echo ""

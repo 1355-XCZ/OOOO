@@ -53,8 +53,8 @@ PLOT_JID=$(submit "sbatch --dependency=afterok:${SER_JID}:${ENT_JID} --parsable 
     --job-name=rq2_plot \
     --partition=sapphire \
     --nodes=1 --ntasks=1 --cpus-per-task=2 --mem=8G --time=00:10:00 \
-    --output=BiasedCodebookExp_v2/paper_pipeline/slurm/logs/rq2_plot_%j.out \
-    --error=BiasedCodebookExp_v2/paper_pipeline/slurm/logs/rq2_plot_%j.err \
+    --output=paper_pipeline/slurm/logs/rq2_plot_%j.out \
+    --error=paper_pipeline/slurm/logs/rq2_plot_%j.err \
     --wrap='source ${ENV_SH} && python -m paper_pipeline.figures.rq2_combined'")
 
 echo ""
@@ -65,6 +65,6 @@ echo "  Entropy Eval: ${ENT_JID} (36 tasks)"
 echo "  Plot:         ${PLOT_JID}"
 echo ""
 echo "  Monitor: squeue -u \$USER"
-echo "  Output:  BiasedCodebookExp_v2/results/paper_figures_rq/rq2_combined_hubert.png"
-echo "           BiasedCodebookExp_v2/results/paper_figures_rq/rq2_combined_wavlm.png"
+echo "  Output:  results/paper_figures_rq/rq2_combined_hubert.png"
+echo "           results/paper_figures_rq/rq2_combined_wavlm.png"
 echo "============================================"

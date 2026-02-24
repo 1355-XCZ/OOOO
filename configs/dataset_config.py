@@ -7,7 +7,6 @@ Dataset configuration and emotion mapping to official emotion2vec 9 classes:
 
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
-from pathlib import Path
 
 from configs.constants import (
     GLOBAL_SEED, DEFAULT_NUM_EPOCHS, DEFAULT_BATCH_SIZE, DEFAULT_LEARNING_RATE,
@@ -22,8 +21,8 @@ E2V_LABEL_TO_IDX = {label: idx for idx, label in enumerate(E2V_LABELS)}
 # Re-export for backward compatibility
 E2V_MODEL_PATH = _E2V_MODEL_PATH
 
-_D = DATA_ROOT
-_C = COLLAB_DATA_ROOT
+_DATA_ROOT = DATA_ROOT
+_COLLAB_ROOT = COLLAB_DATA_ROOT
 
 
 @dataclass
@@ -54,7 +53,7 @@ class DatasetConfig:
 DATASET_CONFIGS: Dict[str, DatasetConfig] = {
     'esd': DatasetConfig(
         name='ESD',
-        data_root=f'{_D}/ESD/Emotion Speech Dataset',
+        data_root=f'{_DATA_ROOT}/ESD/Emotion Speech Dataset',
         emotions=['angry', 'happy', 'neutral', 'sad', 'surprise'],
         emotion_to_e2v={
             'angry': 'angry',       # 0
@@ -68,7 +67,7 @@ DATASET_CONFIGS: Dict[str, DatasetConfig] = {
 
     'esd_en': DatasetConfig(
         name='ESD-English',
-        data_root=f'{_D}/ESD/Emotion Speech Dataset',
+        data_root=f'{_DATA_ROOT}/ESD/Emotion Speech Dataset',
         emotions=['angry', 'happy', 'neutral', 'sad', 'surprise'],
         emotion_to_e2v={
             'angry': 'angry',       # 0
@@ -82,7 +81,7 @@ DATASET_CONFIGS: Dict[str, DatasetConfig] = {
     
     'esd_zh': DatasetConfig(
         name='ESD-Chinese',
-        data_root=f'{_D}/ESD/Emotion Speech Dataset',
+        data_root=f'{_DATA_ROOT}/ESD/Emotion Speech Dataset',
         emotions=['angry', 'happy', 'neutral', 'sad', 'surprise'],
         emotion_to_e2v={
             'angry': 'angry',
@@ -96,7 +95,7 @@ DATASET_CONFIGS: Dict[str, DatasetConfig] = {
 
     'iemocap': DatasetConfig(
         name='IEMOCAP',
-        data_root=f'{_D}/IEMOCAP_full_release',
+        data_root=f'{_DATA_ROOT}/IEMOCAP_full_release',
         emotions=['angry', 'happy', 'neutral', 'sad'],  # merged hap+exc into happy
         emotion_to_e2v={
             'angry': 'angry',       # 0
@@ -109,7 +108,7 @@ DATASET_CONFIGS: Dict[str, DatasetConfig] = {
     
     'ravdess': DatasetConfig(
         name='RAVDESS',
-        data_root=f'{_D}/RAVDESS',
+        data_root=f'{_DATA_ROOT}/RAVDESS',
         emotions=['angry', 'happy', 'neutral', 'sad', 'fearful', 'disgust', 'surprised'],
         emotion_to_e2v={
             'angry': 'angry',       # 0
@@ -126,7 +125,7 @@ DATASET_CONFIGS: Dict[str, DatasetConfig] = {
     
     'cremad': DatasetConfig(
         name='CREMA-D',
-        data_root=f'{_D}/CREMA-D',
+        data_root=f'{_DATA_ROOT}/CREMA-D',
         emotions=['angry', 'happy', 'neutral', 'sad', 'fear', 'disgust'],
         emotion_to_e2v={
             'angry': 'angry',       # 0
@@ -141,7 +140,7 @@ DATASET_CONFIGS: Dict[str, DatasetConfig] = {
     
     'emodb': DatasetConfig(
         name='EmoDB',
-        data_root=f'{_D}/EmoDB',
+        data_root=f'{_DATA_ROOT}/EmoDB',
         emotions=['anger', 'happiness', 'neutral', 'sadness', 'fear', 'disgust'],
         emotion_to_e2v={
             'anger': 'angry',       # 0
@@ -157,7 +156,7 @@ DATASET_CONFIGS: Dict[str, DatasetConfig] = {
     
     'msp': DatasetConfig(
         name='MSP-Podcast',
-        data_root=_C,
+        data_root=_COLLAB_ROOT,
         emotions=['Angry', 'Happy', 'Neutral', 'Sad', 'Surprise'],
         emotion_to_e2v={
             'Angry': 'angry',       # 0
@@ -174,7 +173,7 @@ DATASET_CONFIGS: Dict[str, DatasetConfig] = {
     # All E2V emotion mappings are set so OOD intersection equals the test dataset's full emotion set
     'emilia': DatasetConfig(
         name='Emilia',
-        data_root=f'{_D}/emilia_features/emotion2vec',
+        data_root=f'{_DATA_ROOT}/emilia_features/emotion2vec',
         emotions=['angry', 'disgusted', 'fearful', 'happy', 'neutral', 'sad', 'surprised'],
         emotion_to_e2v={
             'angry': 'angry',
@@ -192,7 +191,7 @@ DATASET_CONFIGS: Dict[str, DatasetConfig] = {
     # Used for comparison experiments with emotion dataset codebooks
     'libritts': DatasetConfig(
         name='LibriTTS',
-        data_root=f'{_D}/LibriTTS/dev-clean',
+        data_root=f'{_DATA_ROOT}/LibriTTS/dev-clean',
         emotions=['angry', 'disgusted', 'fearful', 'happy', 'neutral', 'sad', 'surprised'],
         emotion_to_e2v={
             'angry': 'angry',
@@ -209,7 +208,7 @@ DATASET_CONFIGS: Dict[str, DatasetConfig] = {
     # EmoVDB is skipped because amused/sleepy cannot be mapped
     'emovdb': DatasetConfig(
         name='EmoVDB',
-        data_root=f'{_D}/EmoVDB',
+        data_root=f'{_DATA_ROOT}/EmoVDB',
         emotions=['amused', 'angry', 'disgusted', 'neutral', 'sleepy'],
         emotion_to_e2v={
             'angry': 'angry',
@@ -228,7 +227,7 @@ DATASET_CONFIGS: Dict[str, DatasetConfig] = {
     # CREMA-D (English) -- CAMEO version (differs from original cremad data, avoids conflict)
     'cameo_crema_d': DatasetConfig(
         name='CAMEO-CREMA-D',
-        data_root=f'{_D}/CAMEO/crema_d',
+        data_root=f'{_DATA_ROOT}/CAMEO/crema_d',
         emotions=['anger', 'disgust', 'fear', 'happiness', 'neutral', 'sadness'],
         emotion_to_e2v={
             'anger': 'angry',
@@ -245,7 +244,7 @@ DATASET_CONFIGS: Dict[str, DatasetConfig] = {
     # CaFE (French)
     'cameo_cafe': DatasetConfig(
         name='CAMEO-CaFE',
-        data_root=f'{_D}/CAMEO/cafe',
+        data_root=f'{_DATA_ROOT}/CAMEO/cafe',
         emotions=['anger', 'disgust', 'fear', 'happiness', 'neutral', 'sadness', 'surprise'],
         emotion_to_e2v={
             'anger': 'angry',
@@ -263,7 +262,7 @@ DATASET_CONFIGS: Dict[str, DatasetConfig] = {
     # EMNS (English) -- sarcasm cannot be mapped, skipped
     'cameo_emns': DatasetConfig(
         name='CAMEO-EMNS',
-        data_root=f'{_D}/CAMEO/emns',
+        data_root=f'{_DATA_ROOT}/CAMEO/emns',
         emotions=['anger', 'disgust', 'happiness', 'neutral', 'sadness', 'surprise'],
         emotion_to_e2v={
             'anger': 'angry',
@@ -282,7 +281,7 @@ DATASET_CONFIGS: Dict[str, DatasetConfig] = {
     # Emozionalmente (Italian)
     'cameo_emozionalmente': DatasetConfig(
         name='CAMEO-Emozionalmente',
-        data_root=f'{_D}/CAMEO/emozionalmente',
+        data_root=f'{_DATA_ROOT}/CAMEO/emozionalmente',
         emotions=['anger', 'disgust', 'fear', 'happiness', 'neutral', 'sadness', 'surprise'],
         emotion_to_e2v={
             'anger': 'angry',
@@ -300,7 +299,7 @@ DATASET_CONFIGS: Dict[str, DatasetConfig] = {
     # EnterFace (English)
     'cameo_enterface': DatasetConfig(
         name='CAMEO-EnterFace',
-        data_root=f'{_D}/CAMEO/enterface',
+        data_root=f'{_DATA_ROOT}/CAMEO/enterface',
         emotions=['anger', 'disgust', 'fear', 'happiness', 'sadness', 'surprise'],
         emotion_to_e2v={
             'anger': 'angry',
@@ -317,7 +316,7 @@ DATASET_CONFIGS: Dict[str, DatasetConfig] = {
     # JL Corpus (English) -- only core emotions mapped, others skipped
     'cameo_jl_corpus': DatasetConfig(
         name='CAMEO-JL-Corpus',
-        data_root=f'{_D}/CAMEO/jl_corpus',
+        data_root=f'{_DATA_ROOT}/CAMEO/jl_corpus',
         emotions=['anger', 'happiness', 'neutral', 'sadness'],
         emotion_to_e2v={
             'anger': 'angry',
@@ -333,7 +332,7 @@ DATASET_CONFIGS: Dict[str, DatasetConfig] = {
     # MESD (Spanish)
     'cameo_mesd': DatasetConfig(
         name='CAMEO-MESD',
-        data_root=f'{_D}/CAMEO/mesd',
+        data_root=f'{_DATA_ROOT}/CAMEO/mesd',
         emotions=['anger', 'disgust', 'fear', 'happiness', 'neutral', 'sadness'],
         emotion_to_e2v={
             'anger': 'angry',
@@ -350,7 +349,7 @@ DATASET_CONFIGS: Dict[str, DatasetConfig] = {
     # NEMO (Polish)
     'cameo_nemo': DatasetConfig(
         name='CAMEO-NEMO',
-        data_root=f'{_D}/CAMEO/nemo',
+        data_root=f'{_DATA_ROOT}/CAMEO/nemo',
         emotions=['anger', 'fear', 'happiness', 'neutral', 'sadness', 'surprise'],
         emotion_to_e2v={
             'anger': 'angry',
@@ -367,7 +366,7 @@ DATASET_CONFIGS: Dict[str, DatasetConfig] = {
     # OREAU (French)
     'cameo_oreau': DatasetConfig(
         name='CAMEO-OREAU',
-        data_root=f'{_D}/CAMEO/oreau',
+        data_root=f'{_DATA_ROOT}/CAMEO/oreau',
         emotions=['anger', 'disgust', 'fear', 'happiness', 'neutral', 'sadness', 'surprise'],
         emotion_to_e2v={
             'anger': 'angry',
@@ -385,7 +384,7 @@ DATASET_CONFIGS: Dict[str, DatasetConfig] = {
     # Pavoque (German) -- poker cannot be mapped, skipped
     'cameo_pavoque': DatasetConfig(
         name='CAMEO-Pavoque',
-        data_root=f'{_D}/CAMEO/pavoque',
+        data_root=f'{_DATA_ROOT}/CAMEO/pavoque',
         emotions=['anger', 'happiness', 'neutral', 'sadness'],
         emotion_to_e2v={
             'anger': 'angry',
@@ -401,7 +400,7 @@ DATASET_CONFIGS: Dict[str, DatasetConfig] = {
     # RAVDESS (English) -- CAMEO version, calm skipped
     'cameo_ravdess': DatasetConfig(
         name='CAMEO-RAVDESS',
-        data_root=f'{_D}/CAMEO/ravdess',
+        data_root=f'{_DATA_ROOT}/CAMEO/ravdess',
         emotions=['anger', 'disgust', 'fear', 'happiness', 'neutral', 'sadness', 'surprise'],
         emotion_to_e2v={
             'anger': 'angry',
@@ -420,7 +419,7 @@ DATASET_CONFIGS: Dict[str, DatasetConfig] = {
     # RESD (Russian) -- enthusiasm cannot be mapped, skipped
     'cameo_resd': DatasetConfig(
         name='CAMEO-RESD',
-        data_root=f'{_D}/CAMEO/resd',
+        data_root=f'{_DATA_ROOT}/CAMEO/resd',
         emotions=['anger', 'disgust', 'fear', 'happiness', 'neutral', 'sadness'],
         emotion_to_e2v={
             'anger': 'angry',
@@ -438,7 +437,7 @@ DATASET_CONFIGS: Dict[str, DatasetConfig] = {
     # SUBESCO (Bengali)
     'cameo_subesco': DatasetConfig(
         name='CAMEO-SUBESCO',
-        data_root=f'{_D}/CAMEO/subesco',
+        data_root=f'{_DATA_ROOT}/CAMEO/subesco',
         emotions=['anger', 'disgust', 'fear', 'happiness', 'neutral', 'sadness', 'surprise'],
         emotion_to_e2v={
             'anger': 'angry',
@@ -461,7 +460,7 @@ DATASET_CONFIGS: Dict[str, DatasetConfig] = {
     # Resampled from 44100Hz to 16kHz
     'savee': DatasetConfig(
         name='SAVEE',
-        data_root=f'{_D}/SAVEE_16k',
+        data_root=f'{_DATA_ROOT}/SAVEE_16k',
         emotions=['angry', 'happy', 'neutral', 'sad'],
         emotion_to_e2v={
             'angry': 'angry',
@@ -477,7 +476,7 @@ DATASET_CONFIGS: Dict[str, DatasetConfig] = {
     # Resampled from 24414Hz to 16kHz
     'tess': DatasetConfig(
         name='TESS',
-        data_root=f'{_D}/TESS_16k',
+        data_root=f'{_DATA_ROOT}/TESS_16k',
         emotions=['angry', 'happy', 'neutral', 'sad'],
         emotion_to_e2v={
             'angry': 'angry',
@@ -492,7 +491,7 @@ DATASET_CONFIGS: Dict[str, DatasetConfig] = {
     # MELD (English) -- Friends TV series utterances, organized by emotion after extraction
     'meld': DatasetConfig(
         name='MELD',
-        data_root=f'{_D}/MELD/audio',
+        data_root=f'{_DATA_ROOT}/MELD/audio',
         emotions=['anger', 'joy', 'neutral', 'sadness'],
         emotion_to_e2v={
             'anger': 'angry',
@@ -510,7 +509,7 @@ DATASET_CONFIGS: Dict[str, DatasetConfig] = {
     # Skipped: 01=boredom, 09=excited, 10=pleasure, 11=pain, 12=disappointment, 13=breath
     'asvp_esd': DatasetConfig(
         name='ASVP-ESD',
-        data_root=f'{_D}/ASVP-ESD/ASVP-ESD-Update/Audio',
+        data_root=f'{_DATA_ROOT}/ASVP-ESD/ASVP-ESD-Update/Audio',
         emotions=['neutral', 'happy', 'sad', 'angry', 'fearful', 'disgust', 'surprised'],
         emotion_to_e2v={
             'neutral': 'neutral',
@@ -580,7 +579,7 @@ DATASET_FILE_PATTERNS = {
     },
     'msp': {
         # MSP reads from JSON file
-        'json_path': f'{_C}/msp_ambigous.json',
+        'json_path': f'{_COLLAB_ROOT}/msp_ambigous.json',
     },
 }
 

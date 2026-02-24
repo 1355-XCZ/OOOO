@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=rq31_mix
+#SBATCH --job-name=rq3_1_mix
 #SBATCH --partition=gpu-a100-mig
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
@@ -7,8 +7,8 @@
 #SBATCH --mem=32G
 #SBATCH --gres=gpu:1
 #SBATCH --time=08:00:00
-#SBATCH --output=BiasedCodebookExp_v2/paper_pipeline/slurm/logs/rq31_mix_%A_%a.out
-#SBATCH --error=BiasedCodebookExp_v2/paper_pipeline/slurm/logs/rq31_mix_%A_%a.err
+#SBATCH --output=paper_pipeline/slurm/logs/rq3_1_mix_%A_%a.out
+#SBATCH --error=paper_pipeline/slurm/logs/rq3_1_mix_%A_%a.err
 
 # ==============================================================
 # RQ3.1: Train mixed-ratio codebooks for 3 SSL models
@@ -26,10 +26,10 @@
 #   48-95:  hubert  1024x24
 #   96-143: wavlm   1024x24
 #
-# Usage: sbatch --array=0-143 train_rq31_mixed.slurm
+# Usage: sbatch --array=0-143 train_rq3_1_mixed.slurm
 # ==============================================================
 
-source "${SLURM_SUBMIT_DIR}/BiasedCodebookExp_v2/paper_pipeline/slurm/env.sh"
+source "$(dirname "$0")/env.sh"
 
 TASK_ID=${SLURM_ARRAY_TASK_ID}
 DATASETS=(esd_en iemocap ravdess cremad)
@@ -54,7 +54,7 @@ esac
 
 echo "Task $TASK_ID: ssl=$SSL dataset=$DS emotion=$EMO ratio=$RATIO"
 
-python BiasedCodebookExp_v2/scripts/train/train_mixed_codebook.py \
+python scripts/train/train_mixed_codebook.py \
     --ssl-model "$SSL" \
     --dataset "$DS" \
     --emotion "$EMO" \

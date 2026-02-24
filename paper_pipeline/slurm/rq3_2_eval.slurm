@@ -7,8 +7,8 @@
 #SBATCH --mem=32G
 #SBATCH --gres=gpu:1
 #SBATCH --time=04:00:00
-#SBATCH --output=BiasedCodebookExp_v2/paper_pipeline/slurm/logs/rq32_eval_%A_%a.out
-#SBATCH --error=BiasedCodebookExp_v2/paper_pipeline/slurm/logs/rq32_eval_%A_%a.err
+#SBATCH --output=paper_pipeline/slurm/logs/rq32_eval_%A_%a.out
+#SBATCH --error=paper_pipeline/slurm/logs/rq32_eval_%A_%a.err
 
 # ==============================================================
 # RQ3.2: Evaluate ambiguity codebooks (IEMOCAP source, OOD)
@@ -23,7 +23,7 @@
 # Usage: sbatch --array=0-8 rq3_2_eval.slurm
 # ==============================================================
 
-source "${SLURM_SUBMIT_DIR}/BiasedCodebookExp_v2/paper_pipeline/slurm/env.sh"
+source "$(dirname "$0")/env.sh"
 
 TASK_ID=${SLURM_ARRAY_TASK_ID}
 OOD_TARGETS=(esd_en ravdess cremad)

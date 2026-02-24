@@ -12,7 +12,6 @@
 # --- Auto-detect project layout from this script's location ---
 _SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export EXP_ROOT="$(cd "${_SCRIPT_DIR}/../.." && pwd)"
-export PROJECT_ROOT="$(cd "${EXP_ROOT}/.." && pwd)"
 
 # --- Load user-specific overrides (venv path, data root, etc.) ---
 _LOCAL_CFG="${EXP_ROOT}/local_config.sh"
@@ -30,7 +29,7 @@ export LOG_DIR="${LOG_DIR:-${EXP_ROOT}/paper_pipeline/slurm/logs}"
 module purge
 module load GCCcore/11.3.0 Python/3.10.4 GCC/11.3.0 CUDA/11.7.0 cuDNN/8.4.1.50-CUDA-11.7.0 FFmpeg/4.4.2
 
-cd "${PROJECT_ROOT}"
+cd "${EXP_ROOT}"
 
 # --- Activate virtualenv ---
 if [[ -f "${VENV_PATH}/bin/activate" ]]; then
@@ -39,7 +38,7 @@ else
     echo "WARNING: venv not found at ${VENV_PATH}" >&2
 fi
 
-export PYTHONPATH="${PROJECT_ROOT}:${EXP_ROOT}:${EXP_ROOT}/scripts:${PYTHONPATH}"
+export PYTHONPATH="${EXP_ROOT}:${PYTHONPATH}"
 
 export CB_CONFIG="${CB_CONFIG:-2x32}"
 mkdir -p "${LOG_DIR}"

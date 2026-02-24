@@ -8,7 +8,7 @@ Provides StandardRVQOfficial, EncoderDecoderRVQ, and NonUniformRVQ models.
 import torch
 import torch.nn as nn
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import List
 from vector_quantize_pytorch import ResidualVQ, VectorQuantize
 
 

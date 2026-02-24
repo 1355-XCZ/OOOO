@@ -61,8 +61,8 @@ TABLE_JID=$(submit "sbatch --dependency=afterok:${EVAL_JID} --parsable \
     --job-name=rq22_table \
     --partition=sapphire \
     --nodes=1 --ntasks=1 --cpus-per-task=2 --mem=8G --time=00:10:00 \
-    --output=BiasedCodebookExp_v2/paper_pipeline/slurm/logs/rq22_table_%j.out \
-    --error=BiasedCodebookExp_v2/paper_pipeline/slurm/logs/rq22_table_%j.err \
+    --output=paper_pipeline/slurm/logs/rq22_table_%j.out \
+    --error=paper_pipeline/slurm/logs/rq22_table_%j.err \
     --wrap='source ${ENV_SH} && python -m paper_pipeline.pipeline --rq 2.2 --plot'")
 
 echo ""
@@ -75,5 +75,5 @@ echo "  Eval:  ${EVAL_JID} (48 array tasks)"
 echo "  Table: ${TABLE_JID}"
 echo ""
 echo "  Monitor: squeue -u \$USER"
-echo "  Output:  BiasedCodebookExp_v2/results/paper_figures_rq/rq2_2_table.tex"
+echo "  Output:  results/paper_figures_rq/rq2_2_table.tex"
 echo "============================================"

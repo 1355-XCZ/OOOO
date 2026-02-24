@@ -7,8 +7,8 @@
 #SBATCH --mem=32G
 #SBATCH --gres=gpu:1
 #SBATCH --time=02:00:00
-#SBATCH --output=BiasedCodebookExp_v2/paper_pipeline/slurm/logs/rq23_ent_%A_%a.out
-#SBATCH --error=BiasedCodebookExp_v2/paper_pipeline/slurm/logs/rq23_ent_%A_%a.err
+#SBATCH --output=paper_pipeline/slurm/logs/rq23_ent_%A_%a.out
+#SBATCH --error=paper_pipeline/slurm/logs/rq23_ent_%A_%a.err
 
 # ==============================================================
 # RQ2.3 Entropy Evaluation (e2v, 128x8)
@@ -22,7 +22,7 @@
 # Usage: sbatch --array=0-15 rq2_3_eval.slurm
 # ==============================================================
 
-source "${SLURM_SUBMIT_DIR}/BiasedCodebookExp_v2/paper_pipeline/slurm/env.sh"
+source "$(dirname "$0")/env.sh"
 
 TASK_ID=${SLURM_ARRAY_TASK_ID}
 DATASETS=(esd_en iemocap ravdess cremad)

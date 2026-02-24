@@ -1,2 +1,1 @@
-"""BiasedCodebookExp configuration module"""
-from .dataset_config import *
+"""BiasedCodebookExp configuration module."""

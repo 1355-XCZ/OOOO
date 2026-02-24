@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=rq31_samp
+#SBATCH --job-name=rq3_1_samp
 #SBATCH --partition=gpu-a100-mig
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
@@ -7,14 +7,14 @@
 #SBATCH --mem=32G
 #SBATCH --gres=gpu:1
 #SBATCH --time=04:00:00
-#SBATCH --output=BiasedCodebookExp_v2/paper_pipeline/slurm/logs/rq31_samp_%A_%a.out
-#SBATCH --error=BiasedCodebookExp_v2/paper_pipeline/slurm/logs/rq31_samp_%A_%a.err
+#SBATCH --output=paper_pipeline/slurm/logs/rq3_1_samp_%A_%a.out
+#SBATCH --error=paper_pipeline/slurm/logs/rq3_1_samp_%A_%a.err
 #SBATCH --array=0-35
 
 # 3 SSLs × 12 OOD pairs = 36 tasks
 # Evaluates ALL 10 ratio types with sample-level output
 
-source "${SLURM_SUBMIT_DIR}/BiasedCodebookExp_v2/paper_pipeline/slurm/env.sh"
+source "$(dirname "$0")/env.sh"
 
 SSLS=(e2v hubert wavlm)
 CB_CONFIGS=(2x24 1024x24 1024x24)

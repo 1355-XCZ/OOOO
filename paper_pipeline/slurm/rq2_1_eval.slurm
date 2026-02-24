@@ -7,8 +7,8 @@
 #SBATCH --mem=32G
 #SBATCH --gres=gpu:1
 #SBATCH --time=04:00:00
-#SBATCH --output=BiasedCodebookExp_v2/paper_pipeline/slurm/logs/rq21_eval_%A_%a.out
-#SBATCH --error=BiasedCodebookExp_v2/paper_pipeline/slurm/logs/rq21_eval_%A_%a.err
+#SBATCH --output=paper_pipeline/slurm/logs/rq21_eval_%A_%a.out
+#SBATCH --error=paper_pipeline/slurm/logs/rq21_eval_%A_%a.err
 
 # ==============================================================
 # RQ2.1 Evaluation: SER-F1 for Matched/Unmatched/Balanced (e2v, 128x8)
@@ -23,7 +23,7 @@
 #   sbatch --array=0-15 rq2_1_eval.slurm
 # ==============================================================
 
-source "${SLURM_SUBMIT_DIR}/BiasedCodebookExp_v2/paper_pipeline/slurm/env.sh"
+source "$(dirname "$0")/env.sh"
 
 DATASETS=(esd_en iemocap ravdess cremad)
 

@@ -71,8 +71,8 @@ TABLE_JID=$(submit sbatch ${DEP_ARG2} \
     --partition=sapphire \
     --nodes=1 --ntasks=1 --cpus-per-task=2 --mem=4G \
     --time=00:10:00 \
-    --output=BiasedCodebookExp_v2/paper_pipeline/slurm/logs/rq4_table_%j.out \
-    --error=BiasedCodebookExp_v2/paper_pipeline/slurm/logs/rq4_table_%j.err \
+    --output=paper_pipeline/slurm/logs/rq4_table_%j.out \
+    --error=paper_pipeline/slurm/logs/rq4_table_%j.err \
     --wrap="'source ${SCRIPT_DIR}/env.sh && python -m paper_pipeline.figures.rq4'")
 echo "  Submitted table job: ${TABLE_JID}"
 

@@ -7,8 +7,8 @@
 #SBATCH --mem=32G
 #SBATCH --gres=gpu:1
 #SBATCH --time=04:00:00
-#SBATCH --output=BiasedCodebookExp_v2/paper_pipeline/slurm/logs/rq32_amb_%A_%a.out
-#SBATCH --error=BiasedCodebookExp_v2/paper_pipeline/slurm/logs/rq32_amb_%A_%a.err
+#SBATCH --output=paper_pipeline/slurm/logs/rq32_amb_%A_%a.out
+#SBATCH --error=paper_pipeline/slurm/logs/rq32_amb_%A_%a.err
 
 # ==============================================================
 # RQ3.2: Train ambiguity codebooks (IEMOCAP only)
@@ -27,7 +27,7 @@
 # Usage: sbatch --array=0-35 train_rq32_ambiguity.slurm
 # ==============================================================
 
-source "${SLURM_SUBMIT_DIR}/BiasedCodebookExp_v2/paper_pipeline/slurm/env.sh"
+source "$(dirname "$0")/env.sh"
 
 TASK_ID=${SLURM_ARRAY_TASK_ID}
 EMOTIONS=(angry happy neutral sad)
@@ -49,14 +49,13 @@ esac
 
 echo "Task $TASK_ID: ssl=$SSL emotion=$EMO level=$LVL"
 
-python BiasedCodebookExp_v2/scripts/train/train_ambiguity_codebook.py \
+python scripts/train/train_ambiguity_codebook.py \
     --ssl-model "$SSL" \
     --dataset iemocap \
     --emotion "$EMO" \
     --level "$LVL" \
     --codebook-size "$CB_SIZE" \
     --num-layers "$N_LAYERS" \
-    --batch-size 16 \
     --device cuda
 
 echo "Done: task $TASK_ID at $(date)"

@@ -60,8 +60,8 @@ PLOT_JID=$(submit "sbatch --dependency=afterok:${EVAL_JID} --parsable \
     --job-name=rq1_plot \
     --partition=sapphire \
     --nodes=1 --ntasks=1 --cpus-per-task=2 --mem=8G --time=00:10:00 \
-    --output=BiasedCodebookExp_v2/paper_pipeline/slurm/logs/rq1_plot_%j.out \
-    --error=BiasedCodebookExp_v2/paper_pipeline/slurm/logs/rq1_plot_%j.err \
+    --output=paper_pipeline/slurm/logs/rq1_plot_%j.out \
+    --error=paper_pipeline/slurm/logs/rq1_plot_%j.err \
     --wrap='source ${ENV_SH} && python -m paper_pipeline.pipeline --rq 1 --plot'")
 
 echo ""
@@ -74,5 +74,5 @@ echo "  Eval:  ${EVAL_JID} (16 tasks)"
 echo "  Plot:  ${PLOT_JID}"
 echo ""
 echo "  Monitor: squeue -u \$USER"
-echo "  Output:  BiasedCodebookExp_v2/results/paper_figures_rq/rq1_balanced_ssl_ood.png"
+echo "  Output:  results/paper_figures_rq/rq1_balanced_ssl_ood.png"
 echo "============================================"

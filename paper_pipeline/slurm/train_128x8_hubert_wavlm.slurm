@@ -7,8 +7,8 @@
 #SBATCH --mem=32G
 #SBATCH --gres=gpu:1
 #SBATCH --time=06:00:00
-#SBATCH --output=BiasedCodebookExp_v2/paper_pipeline/slurm/logs/train128x8_%A_%a.out
-#SBATCH --error=BiasedCodebookExp_v2/paper_pipeline/slurm/logs/train128x8_%A_%a.err
+#SBATCH --output=paper_pipeline/slurm/logs/train128x8_%A_%a.out
+#SBATCH --error=paper_pipeline/slurm/logs/train128x8_%A_%a.err
 
 # ==============================================================
 # Train 128x8 codebooks for hubert & wavlm on 4 ID datasets
@@ -24,7 +24,7 @@
 # Usage: sbatch --array=0-39 train_128x8_hubert_wavlm.slurm
 # ==============================================================
 
-source "${SLURM_SUBMIT_DIR}/BiasedCodebookExp_v2/paper_pipeline/slurm/env.sh"
+source "$(dirname "$0")/env.sh"
 
 TASK_ID=${SLURM_ARRAY_TASK_ID}
 DATASETS=(esd_en iemocap ravdess cremad)
@@ -42,7 +42,7 @@ echo "Task $TASK_ID: ssl=$SSL dataset=$DS cb_idx=$CB_IDX config=128x8"
 
 if [ $CB_IDX -eq 0 ]; then
     echo "Training BALANCED codebook for $SSL / $DS (128x8)"
-    python BiasedCodebookExp_v2/scripts/train/train_balanced_codebook.py \
+    python scripts/train/train_balanced_codebook.py \
         --dataset "$DS" \
         --ssl-model "$SSL" \
         --codebook-size 128 \
@@ -53,7 +53,7 @@ else
     EMO_IDX=$(( CB_IDX - 1 ))
     EMOTION=${EMOTIONS[$EMO_IDX]}
     echo "Training BIASED codebook for $SSL / $DS / $EMOTION (128x8)"
-    python BiasedCodebookExp_v2/scripts/train/train_biased_codebook.py \
+    python scripts/train/train_biased_codebook.py \
         --dataset "$DS" \
         --emotion "$EMOTION" \
         --ssl-model "$SSL" \

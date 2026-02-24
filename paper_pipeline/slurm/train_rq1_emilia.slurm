@@ -7,8 +7,8 @@
 #SBATCH --mem=32G
 #SBATCH --gres=gpu:1
 #SBATCH --time=08:00:00
-#SBATCH --output=BiasedCodebookExp_v2/paper_pipeline/slurm/logs/rq1_train_%A_%a.out
-#SBATCH --error=BiasedCodebookExp_v2/paper_pipeline/slurm/logs/rq1_train_%A_%a.err
+#SBATCH --output=paper_pipeline/slurm/logs/rq1_train_%A_%a.out
+#SBATCH --error=paper_pipeline/slurm/logs/rq1_train_%A_%a.err
 
 # ==============================================================
 # Train 4 natural codebooks on Emilia EN for RQ1
@@ -22,7 +22,7 @@
 # Usage: sbatch --array=0-3 train_rq1_emilia.slurm
 # ==============================================================
 
-source "${SLURM_SUBMIT_DIR}/BiasedCodebookExp_v2/paper_pipeline/slurm/env.sh"
+source "$(dirname "$0")/env.sh"
 
 TASK_ID=${SLURM_ARRAY_TASK_ID}
 
@@ -35,7 +35,7 @@ esac
 
 echo "Task $TASK_ID: ssl=$SSL codebook_size=$CB_SIZE num_layers=$N_LAYERS"
 
-python BiasedCodebookExp_v2/scripts/train/train_emilia_codebook.py \
+python scripts/train/train_emilia_codebook.py \
     --ssl-model "$SSL" \
     --codebook-size "$CB_SIZE" \
     --num-layers "$N_LAYERS" \

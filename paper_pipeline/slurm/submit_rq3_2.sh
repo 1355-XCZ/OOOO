@@ -77,8 +77,8 @@ fi
 TABLE_CMD="python -m paper_pipeline.figures.rq3_2"
 WRAP_CMD="sbatch --job-name=rq32_tab --partition=sapphire --nodes=1 --ntasks=1 \
 --cpus-per-task=2 --mem=8G --time=00:30:00 \
---output=BiasedCodebookExp_v2/paper_pipeline/slurm/logs/rq32_tab_%j.out \
---error=BiasedCodebookExp_v2/paper_pipeline/slurm/logs/rq32_tab_%j.err \
+--output=paper_pipeline/slurm/logs/rq32_tab_%j.out \
+--error=paper_pipeline/slurm/logs/rq32_tab_%j.err \
 $DEP3 --wrap=\"source $SCRIPT_DIR/env.sh && $TABLE_CMD\""
 
 echo "[Stage 3] $WRAP_CMD"

@@ -46,7 +46,7 @@ TRAIN_DEP=""
 if ! $SKIP_TRAIN; then
     echo ""
     echo "--- Train mixed-ratio codebooks (144 GPU tasks) ---"
-    TRAIN_JID=$(submit "sbatch --array=0-143 --parsable ${SLURM_DIR}/train_rq31_mixed.slurm")
+    TRAIN_JID=$(submit "sbatch --array=0-143 --parsable ${SLURM_DIR}/train_rq3_1_mixed.slurm")
     TRAIN_DEP="--dependency=afterok:${TRAIN_JID}"
     echo "  Train job: $TRAIN_JID"
 else
@@ -61,11 +61,11 @@ EVAL_JID=$(submit "sbatch --array=0-35 ${TRAIN_DEP} --parsable ${SLURM_DIR}/rq3_
 echo ""
 echo "--- Table generation (CPU, after eval) ---"
 TABLE_JID=$(submit "sbatch --dependency=afterok:${EVAL_JID} --parsable \
-    --job-name=rq31_tab \
+    --job-name=rq3_1_tab \
     --partition=sapphire \
     --nodes=1 --ntasks=1 --cpus-per-task=2 --mem=8G --time=00:10:00 \
-    --output=BiasedCodebookExp_v2/paper_pipeline/slurm/logs/rq31_table_%j.out \
-    --error=BiasedCodebookExp_v2/paper_pipeline/slurm/logs/rq31_table_%j.err \
+    --output=paper_pipeline/slurm/logs/rq3_1_table_%j.out \
+    --error=paper_pipeline/slurm/logs/rq3_1_table_%j.err \
     --wrap='source ${ENV_SH} && python -m paper_pipeline.figures.rq3_1'")
 
 echo ""
@@ -78,5 +78,5 @@ echo "  Eval:  ${EVAL_JID} (36 tasks)"
 echo "  Table: ${TABLE_JID}"
 echo ""
 echo "  Monitor: squeue -u \$USER"
-echo "  Output:  BiasedCodebookExp_v2/results/paper_figures_rq/rq3_1_table.tex"
+echo "  Output:  results/paper_figures_rq/rq3_1_table.tex"
 echo "============================================"

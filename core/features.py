@@ -225,7 +225,7 @@ def get_codebook_dir(base_codebook_dir: str, ssl_model: str, dataset: str,
     (All SSL models now use the same pattern.)
 
     Args:
-        base_codebook_dir: Base codebook directory (e.g. BiasedCodebookExp_v2/codebooks)
+        base_codebook_dir: Base codebook directory (e.g. codebooks/)
         ssl_model: One of 'e2v', 'hubert', 'wavlm'
         dataset: Dataset name (e.g. 'esd')
         config: Codebook config name (e.g. '2x32', '8x128')

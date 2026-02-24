@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=rq31_train
+#SBATCH --job-name=rq3_1_train
 #SBATCH --partition=gpu-a100-mig
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
@@ -7,8 +7,8 @@
 #SBATCH --mem=32G
 #SBATCH --gres=gpu:1
 #SBATCH --time=02:00:00
-#SBATCH --output=BiasedCodebookExp_v2/paper_pipeline/slurm/logs/rq31_train_%A_%a.out
-#SBATCH --error=BiasedCodebookExp_v2/paper_pipeline/slurm/logs/rq31_train_%A_%a.err
+#SBATCH --output=paper_pipeline/slurm/logs/rq3_1_train_%A_%a.out
+#SBATCH --error=paper_pipeline/slurm/logs/rq3_1_train_%A_%a.err
 #SBATCH --array=0-239
 
 # 5 ratios × 4 emotions × 4 datasets × 3 SSLs = 240 tasks
@@ -18,7 +18,7 @@
 # Datasets: esd_en, iemocap, ravdess, cremad
 # SSLs: e2v (2x24), hubert (1024x24), wavlm (1024x24)
 
-source "${SLURM_SUBMIT_DIR}/BiasedCodebookExp_v2/paper_pipeline/slurm/env.sh"
+source "$(dirname "$0")/env.sh"
 set -e
 
 RATIOS=(0.10 0.20 0.40 0.50 0.70)
@@ -58,7 +58,7 @@ echo "Task ${SLURM_ARRAY_TASK_ID}: SSL=${SSL}, dataset=${DATASET}, emotion=${EMO
 # All datasets use full emotion names (angry, happy, neutral, sad)
 DS_EMOTION="$EMOTION"
 
-python BiasedCodebookExp_v2/scripts/train/train_mixed_codebook.py \
+python scripts/train/train_mixed_codebook.py \
     --dataset "${DATASET}" \
     --emotion "${DS_EMOTION}" \
     --target-ratio "${RATIO}" \

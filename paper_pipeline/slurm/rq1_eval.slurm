@@ -7,8 +7,8 @@
 #SBATCH --mem=32G
 #SBATCH --gres=gpu:1
 #SBATCH --time=04:00:00
-#SBATCH --output=BiasedCodebookExp_v2/paper_pipeline/slurm/logs/rq1_eval_%A_%a.out
-#SBATCH --error=BiasedCodebookExp_v2/paper_pipeline/slurm/logs/rq1_eval_%A_%a.err
+#SBATCH --output=paper_pipeline/slurm/logs/rq1_eval_%A_%a.out
+#SBATCH --error=paper_pipeline/slurm/logs/rq1_eval_%A_%a.err
 
 # ==============================================================
 # RQ1: Evaluate BALANCED codebooks -- OOD cross-dataset evaluation
@@ -22,7 +22,7 @@
 # Usage: sbatch --array=0-35 rq1_eval.slurm
 # ==============================================================
 
-source "${SLURM_SUBMIT_DIR}/BiasedCodebookExp_v2/paper_pipeline/slurm/env.sh"
+source "$(dirname "$0")/env.sh"
 set -e
 
 TASK_ID=${SLURM_ARRAY_TASK_ID}
@@ -55,7 +55,7 @@ echo "Task $TASK_ID: ssl=$SSL config=$CB_CONFIG codebook_src=$SRC test=$TGT"
 
 OUTPUT_DIR="${EXP_ROOT}/results/rq1_balanced/${TAG}"
 
-python BiasedCodebookExp_v2/scripts/evaluate/evaluate_ssl_balanced_2x32.py \
+python -m paper_pipeline.evaluators.rq1_evaluate \
     --ssl-model "$SSL" \
     --codebook-dataset "$SRC" \
     --test-dataset "$TGT" \

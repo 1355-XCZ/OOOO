@@ -11,7 +11,6 @@ Sources:
     - ssl_feature_utils.py (lines 24-34)
 """
 
-import os
 import random
 import sys
 import numpy as np

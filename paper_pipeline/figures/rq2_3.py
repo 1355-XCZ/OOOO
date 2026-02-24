@@ -11,7 +11,7 @@ Each subplot:
   - 4 lines: one per test emotion (angry, happy, neutral, sad)
   - For biased codebooks: matched emotion = solid, unmatched = dashed
 
-Data source: results/codebook_entropy_128x8/{src}_to_{tgt}_ood.json
+Data source: results/rq2_entropy_128x8/e2v/{src}_to_{tgt}_ood.json
 """
 
 import sys
@@ -28,7 +28,7 @@ sys.path.insert(0, str(PIPELINE_DIR))
 
 from config import RESULTS_DIR, PAPER_FIGURES_DIR, ID_DATASETS, NUM_LAYERS
 
-ENTROPY_DIR = RESULTS_DIR / 'rq2_3_entropy_128x8'
+ENTROPY_DIR = RESULTS_DIR / 'rq2_entropy_128x8' / 'e2v'
 
 COMMON_EMOTIONS = ['angry', 'happy', 'neutral', 'sad']
 
