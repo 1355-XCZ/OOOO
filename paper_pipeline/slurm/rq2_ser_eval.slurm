@@ -58,6 +58,7 @@ python -m paper_pipeline.evaluators.rq2_1_matched_ser \
     --test-dataset "$TGT" \
     --num-layers "$N_LAYERS" \
     --max-samples 200 \
+    --force \
     --device cuda
 
 echo "Done: task $TASK_ID at $(date)"

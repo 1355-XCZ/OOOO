@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """
-RQ2 Combined Figure -- SER-F1 + Entropy for e2v vs non-emotion target
+RQ2 Combined Figure -- SER Recall + Entropy for e2v vs non-emotion target
 
 Layout:
-  Row 1 (SER-F1): 2 subplots
+  Row 1 (SER Recall): 2 subplots
     Left:  emotion target (e2v, 2x24)
     Right: non-emotion target (HuBERT or WavLM, 1024x24)
+    Lines: Balanced(all)[solid], Biased(all)[solid], Biased(matched)[dashed], Biased(unmatched)[dashed]
 
   Row 2 (Entropy): 4 subplots
     Col 1: Balanced entropy (e2v) -- 4 emotion lines
@@ -56,23 +57,33 @@ EMOTION_DISPLAY = {
 }
 
 CODEBOOK_TYPE_STYLES = {
+    'balanced': {
+        'label': 'Balanced (all)',
+        'color': '#757575',
+        'marker': 'o',
+        'ls': '-',
+        'lw': 2.5,
+    },
+    'biased_all': {
+        'label': 'Biased (all)',
+        'color': '#7B1FA2',
+        'marker': 's',
+        'ls': '-',
+        'lw': 2.5,
+    },
     'biased_matched': {
         'label': 'Biased (matched)',
         'color': '#1E88E5',
-        'marker': 'o',
-        'ls': '-',
+        'marker': '^',
+        'ls': '--',
+        'lw': 1.8,
     },
     'biased_unmatched': {
         'label': 'Biased (unmatched)',
         'color': '#E53935',
-        'marker': 'o',
-        'ls': '-',
-    },
-    'balanced': {
-        'label': 'Balanced',
-        'color': '#9E9E9E',
-        'marker': 'o',
-        'ls': '-',
+        'marker': 'v',
+        'ls': '--',
+        'lw': 1.8,
     },
 }
 
@@ -86,8 +97,8 @@ BASELINE_DIR = RESULTS_DIR / 'ssl_comparison_l2_64x8_emilia_ood'
 FAIR_EMOTIONS = ['angry', 'happy', 'neutral', 'sad']
 
 
-def _load_f1_baseline(ssl_model: str) -> float:
-    """Load unquantized macro-recall as F1-Macro baseline, averaged across OOD test datasets."""
+def _load_recall_baseline(ssl_model: str) -> float:
+    """Load unquantized macro-recall baseline, averaged across OOD test datasets."""
     ssl_dir = BASELINE_DIR / ssl_model
     macro_recalls = []
     for ds in ID_DATASETS:
@@ -112,7 +123,7 @@ def _ser_results_dir(config: str, ssl_model: str) -> Path:
 
 
 def _load_ser_ood_avg(config: str, ssl_model: str) -> dict:
-    """Load OOD SER-F1 results, average across all OOD pairs."""
+    """Load OOD SER recall-macro results, average across all OOD pairs."""
     results_dir = _ser_results_dir(config, ssl_model)
     all_data = []
     for src in ID_DATASETS:
@@ -134,7 +145,7 @@ def _load_ser_ood_avg(config: str, ssl_model: str) -> dict:
             ct_data = d.get(ct, {})
             for layer_key, metrics in ct_data.items():
                 layer_num = int(layer_key.replace('layer_', ''))
-                layer_vals[layer_num].append(metrics.get('f1_macro', 0.0))
+                layer_vals[layer_num].append(metrics.get('recall_macro', 0.0))
         result[ct] = {l: float(np.mean(vs)) for l, vs in sorted(layer_vals.items())}
 
     return result
@@ -239,7 +250,7 @@ def _plot_figure(target_ssl: str, output_path: Path, free_scale: bool = False):
     ser_axes = []
     ent_axes = []
 
-    # ---- (a) SER F1-Macro: 2 subplots ----
+    # ---- (a) SER Recall: 2 subplots ----
     for col_idx, (ssl, config, title) in enumerate(ssl_configs):
         ax = fig.add_subplot(gs_ser[col_idx])
         ser_axes.append(ax)
@@ -259,10 +270,10 @@ def _plot_figure(target_ssl: str, output_path: Path, free_scale: bool = False):
                             color=style['color'],
                             marker=style['marker'],
                             linestyle=style['ls'],
-                            linewidth=2.5,
-                            markersize=7)
+                            linewidth=style.get('lw', 2.5),
+                            markersize=6)
 
-            bl_val = _load_f1_baseline(ssl)
+            bl_val = _load_recall_baseline(ssl)
             if bl_val is not None:
                 ax.axhline(y=bl_val, color='#666666',
                            linestyle=':', linewidth=1.5, alpha=0.5,
@@ -271,7 +282,7 @@ def _plot_figure(target_ssl: str, output_path: Path, free_scale: bool = False):
         ax.set_title(title, fontsize=14, fontweight='bold')
         ax.set_xlabel('RVQ Layer', fontsize=12)
         if col_idx == 0:
-            ax.set_ylabel('SER F1-Macro', fontsize=13)
+            ax.set_ylabel('SER Recall-Macro', fontsize=13)
         ax.set_xticks(layers[::2])
         ax.set_xlim(0.5, NUM_LAYERS + 0.5)
         ax.tick_params(axis='both', labelsize=11)
@@ -358,7 +369,7 @@ def _plot_figure(target_ssl: str, output_path: Path, free_scale: bool = False):
 
     ser_left = ser_axes[0].get_position().x0
     ser_right = ser_axes[-1].get_position().x1
-    fig.text((ser_left + ser_right) / 2, 1.03, '(a) SER F1-Macro',
+    fig.text((ser_left + ser_right) / 2, 1.03, '(a) SER Recall',
              ha='center', fontsize=16, fontweight='bold', transform=fig.transFigure)
 
     ent_left = ent_axes[0].get_position().x0
@@ -393,7 +404,7 @@ def run(dry_run=False):
 
 
 def description() -> str:
-    return "RQ2 Combined: SER-F1 + Entropy (e2v vs HuBERT/WavLM)"
+    return "RQ2 Combined: SER Recall + Entropy (e2v vs HuBERT/WavLM)"
 
 
 def main():

@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 """
-RQ2.1 Evaluator -- SER F1/Accuracy for Matched vs Unmatched vs Balanced codebooks
+RQ2.1 Evaluator -- SER metrics for Matched/Unmatched/All/Balanced codebooks
 
-Computes per-layer SER metrics (F1-macro, accuracy) using the appropriate
-classification head on features quantized by three codebook types:
+Computes per-layer SER metrics (F1-macro, recall-macro, accuracy) using the
+appropriate classification head on features quantized by four codebook types:
 
-  - balanced:        single balanced codebook for all samples
-  - biased_matched:  for each emotion E, use biased_E codebook on E samples
-  - biased_unmatched: for each emotion E, use biased_{C!=E} codebooks on E samples,
-                      pool predictions across all non-matching codebooks
+  - balanced:          single balanced codebook for all samples
+  - biased_matched:    for each emotion E, use biased_E codebook on E samples
+  - biased_unmatched:  for each emotion E, use biased_{C!=E} codebooks on E samples,
+                       pool predictions across all non-matching codebooks
+  - biased_all:        each biased codebook tested on ALL emotions fairly,
+                       per-codebook metrics averaged across 4 codebooks
 
 Supports multiple SSL models (e2v, hubert, wavlm) and codebook configs.
 
@@ -33,7 +35,7 @@ import torch
 import torch.nn.functional as F
 from tqdm import tqdm
 import numpy as np
-from sklearn.metrics import accuracy_score, f1_score
+from sklearn.metrics import accuracy_score, f1_score, recall_score
 
 EXP_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(EXP_ROOT))
@@ -147,14 +149,15 @@ def evaluate_codebook_on_samples(
 
 
 def compute_metrics(pairs: List[Tuple[str, str]]) -> Dict[str, float]:
-    """Compute accuracy and F1-macro from (true, pred) label pairs."""
+    """Compute accuracy, F1-macro, and recall-macro from (true, pred) label pairs."""
     if not pairs:
-        return {'accuracy': 0.0, 'f1_macro': 0.0, 'num_samples': 0}
+        return {'accuracy': 0.0, 'f1_macro': 0.0, 'recall_macro': 0.0, 'num_samples': 0}
     y_true = [p[0] for p in pairs]
     y_pred = [p[1] for p in pairs]
     return {
         'accuracy': float(accuracy_score(y_true, y_pred)),
         'f1_macro': float(f1_score(y_true, y_pred, average='macro', zero_division=0)),
+        'recall_macro': float(recall_score(y_true, y_pred, average='macro', zero_division=0)),
         'num_samples': len(pairs),
     }
 
@@ -233,6 +236,31 @@ def evaluate_matched_unmatched_balanced(
         f'layer_{l}': compute_metrics(unmatched_layer_pairs.get(l, []))
         for l in range(1, num_layers + 1)
     }
+
+    # --- Biased All (fair test: each biased codebook on ALL emotions, avg across codebooks) ---
+    logger.info("Evaluating biased_all (each biased codebook on all emotions)...")
+    biased_all_per_cb: Dict[str, Dict[int, List[Tuple[str, str]]]] = {}
+    for emotion in eval_emotions:
+        layer_pairs = evaluate_codebook_on_samples(
+            biased_codebooks[emotion], filtered_samples, e2v_head,
+            valid_indices, valid_e2v_labels, num_layers, device,
+            desc=f"BiasedAll-{emotion}",
+        )
+        biased_all_per_cb[emotion] = layer_pairs
+
+    biased_all_results = {}
+    for layer in range(1, num_layers + 1):
+        per_cb_metrics = []
+        for emotion in eval_emotions:
+            pairs = biased_all_per_cb.get(emotion, {}).get(layer, [])
+            per_cb_metrics.append(compute_metrics(pairs))
+        biased_all_results[f'layer_{layer}'] = {
+            'accuracy': float(np.mean([m['accuracy'] for m in per_cb_metrics])),
+            'f1_macro': float(np.mean([m['f1_macro'] for m in per_cb_metrics])),
+            'recall_macro': float(np.mean([m['recall_macro'] for m in per_cb_metrics])),
+            'num_samples': sum(m['num_samples'] for m in per_cb_metrics),
+        }
+    results['biased_all'] = biased_all_results
 
     return results
 
@@ -414,6 +442,8 @@ def main():
     parser.add_argument('--num-layers', type=int, default=DEFAULT_NUM_LAYERS)
     parser.add_argument('--device', type=str, default='cuda')
     parser.add_argument('--output-dir', type=str, default=None)
+    parser.add_argument('--force', action='store_true',
+                        help='Overwrite existing result files')
     args = parser.parse_args()
 
     if args.test_dataset is None:
@@ -443,6 +473,10 @@ def main():
         out_path = output_dir / f'{args.codebook_dataset}_id.json'
     else:
         out_path = output_dir / f'{args.codebook_dataset}_to_{args.test_dataset}_ood.json'
+
+    if out_path.exists() and not args.force:
+        logger.info(f"Skipping (exists, use --force to overwrite): {out_path}")
+        return
 
     with open(out_path, 'w') as f:
         json.dump(result, f, indent=2)

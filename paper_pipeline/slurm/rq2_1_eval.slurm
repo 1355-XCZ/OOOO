@@ -39,6 +39,7 @@ if [ "$SRC" == "$TGT" ]; then
     python -m paper_pipeline.evaluators.rq2_1_matched_ser \
         --codebook-dataset "$SRC" \
         --max-samples 200 \
+        --force \
         --device cuda
 else
     echo "RQ2.1 Evaluating: $SRC -> $TGT (OOD) | task=$TASK_ID"
@@ -46,6 +47,7 @@ else
         --codebook-dataset "$SRC" \
         --test-dataset "$TGT" \
         --max-samples 200 \
+        --force \
         --device cuda
 fi
 
