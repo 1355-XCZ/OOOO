@@ -85,8 +85,8 @@ echo "--- Step 0: Data Preparation ---"
 if [[ "${DRY_RUN}" == false ]]; then
     echo "  Running prepare_splits.py ..."
     python scripts/utils/prepare_splits.py
-    echo "  Running prepare_ambiguity_splits.py ..."
-    python scripts/utils/prepare_ambiguity_splits.py
+    echo "  Running prepare_secondary_emotion_testset.py ..."
+    python scripts/utils/prepare_secondary_emotion_testset.py
     echo "  Running prepare_splits.py --cameo --test-only ..."
     python scripts/utils/prepare_splits.py --cameo --test-only
     echo "  Running prepare_splits.py --datasets msp --test-only ..."
@@ -94,7 +94,7 @@ if [[ "${DRY_RUN}" == false ]]; then
     echo "  [DONE] Data preparation complete"
 else
     echo "  [DRY] python scripts/utils/prepare_splits.py"
-    echo "  [DRY] python scripts/utils/prepare_ambiguity_splits.py"
+    echo "  [DRY] python scripts/utils/prepare_secondary_emotion_testset.py"
     echo "  [DRY] python scripts/utils/prepare_splits.py --cameo --test-only"
     echo "  [DRY] python scripts/utils/prepare_splits.py --datasets msp --test-only"
 fi

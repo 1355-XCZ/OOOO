@@ -61,10 +61,6 @@ SSL_CONFIGS = {
     'wavlm':  {'cb_config': '1024x24', 'num_layers': 24},
 }
 CODEBOOK_SOURCES = ['esd_en', 'ravdess', 'cremad']
-CLASSIFIER_SOURCE_MAP = {
-    'cremad_clear': 'cremad',
-    'cremad_ambig': 'cremad',
-}
 RATIO_LEVELS = [95, 99]
 EPSILON = 1e-6
 
@@ -253,7 +249,7 @@ def run(args=None, dry_run=False):
                 f'balanced={"OK" if balanced else "MISSING"}, '
                 f'biased={list(biased.keys())}')
 
-    classifier_source = CLASSIFIER_SOURCE_MAP.get(cb_source, cb_source)
+    classifier_source = cb_source
     if ssl_model == 'e2v' and not args.use_custom_head:
         head = load_e2v_head(E2V_HEAD_PATH, device)
     else:

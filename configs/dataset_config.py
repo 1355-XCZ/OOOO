@@ -108,31 +108,6 @@ DATASET_CONFIGS: Dict[str, DatasetConfig] = {
         },
         enabled=True,
     ),
-    'cremad_clear': DatasetConfig(
-        name='CREMA-D (clear, 100% agreement)',
-        data_root=f'{_DATA_ROOT}/CREMA-D',
-        emotions=['angry', 'happy', 'neutral', 'sad'],
-        emotion_to_e2v={
-            'angry': 'angry',
-            'happy': 'happy',
-            'neutral': 'neutral',
-            'sad': 'sad',
-        },
-        enabled=True,
-    ),
-    'cremad_ambig': DatasetConfig(
-        name='CREMA-D (ambiguous, <100% agreement)',
-        data_root=f'{_DATA_ROOT}/CREMA-D',
-        emotions=['angry', 'happy', 'neutral', 'sad'],
-        emotion_to_e2v={
-            'angry': 'angry',
-            'happy': 'happy',
-            'neutral': 'neutral',
-            'sad': 'sad',
-        },
-        enabled=True,
-    ),
-    
     'msp': DatasetConfig(
         name='MSP-Podcast',
         data_root=f'{_DATA_ROOT}/MSP',

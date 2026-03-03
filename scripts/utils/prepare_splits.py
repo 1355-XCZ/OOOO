@@ -372,7 +372,9 @@ def main():
     else:
         datasets = list(get_enabled_datasets().keys())
         # Exclude CAMEO datasets (test-only, handled separately)
-        datasets = [d for d in datasets if not d.startswith('cameo_')]
+        datasets = [d for d in datasets
+                    if not d.startswith('cameo_')
+                    and d not in ('cremad_clear', 'cremad_ambig')]
         test_only = args.test_only
     
     print("="*60)
