@@ -82,58 +82,44 @@ def _ensure_dirs():
 # Auto-downloadable datasets
 # ============================================================
 
-def download_ravdess():
-    target = DATASET_TARGETS['ravdess']
+def _kaggle_download(kaggle_handle: str, dataset_key: str, display_name: str):
+    """Download a Kaggle dataset directly to the target directory (no ~/.cache)."""
+    target = DATASET_TARGETS[dataset_key]
     if _check_exists(target):
-        print(f'  [SKIP] RAVDESS already exists ({target})')
+        print(f'  [SKIP] {display_name} already exists ({target})')
         return True
 
-    print('  Downloading RAVDESS from Kaggle ...')
+    print(f'  Downloading {display_name} from Kaggle ...')
     try:
         import kagglehub
-        cache_path = Path(kagglehub.dataset_download('uwrfkaggler/ravdess-emotional-speech-audio'))
         target.mkdir(parents=True, exist_ok=True)
+        dl_path = Path(kagglehub.dataset_download(
+            kaggle_handle, output_dir=str(target)))
 
-        for item in cache_path.rglob('*'):
-            if item.is_file():
-                rel = item.relative_to(cache_path)
-                dst = target / rel
-                dst.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(item, dst)
+        if dl_path != target:
+            for item in dl_path.rglob('*'):
+                if item.is_file():
+                    rel = item.relative_to(dl_path)
+                    dst = target / rel
+                    dst.parent.mkdir(parents=True, exist_ok=True)
+                    if not dst.exists():
+                        shutil.move(str(item), str(dst))
 
         wav_count = len(list(target.rglob('*.wav')))
-        print(f'  [OK] RAVDESS: {wav_count} wav files -> {target}')
+        print(f'  [OK] {display_name}: {wav_count} wav files -> {target}')
         return True
     except Exception as e:
-        print(f'  [FAIL] RAVDESS download failed: {e}')
+        print(f'  [FAIL] {display_name} download failed: {e}')
         return False
+
+
+def download_ravdess():
+    return _kaggle_download('uwrfkaggler/ravdess-emotional-speech-audio',
+                            'ravdess', 'RAVDESS')
 
 
 def download_cremad():
-    target = DATASET_TARGETS['cremad']
-    if _check_exists(target):
-        print(f'  [SKIP] CREMA-D already exists ({target})')
-        return True
-
-    print('  Downloading CREMA-D from Kaggle ...')
-    try:
-        import kagglehub
-        cache_path = Path(kagglehub.dataset_download('ejlok1/cremad'))
-        target.mkdir(parents=True, exist_ok=True)
-
-        for item in cache_path.rglob('*'):
-            if item.is_file():
-                rel = item.relative_to(cache_path)
-                dst = target / rel
-                dst.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(item, dst)
-
-        wav_count = len(list(target.rglob('*.wav')))
-        print(f'  [OK] CREMA-D: {wav_count} wav files -> {target}')
-        return True
-    except Exception as e:
-        print(f'  [FAIL] CREMA-D download failed: {e}')
-        return False
+    return _kaggle_download('ejlok1/cremad', 'cremad', 'CREMA-D')
 
 
 def download_esd():
