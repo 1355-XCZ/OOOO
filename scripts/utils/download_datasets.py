@@ -167,22 +167,37 @@ def download_cameo_subset(split_name: str):
     try:
         from datasets import load_dataset
         import soundfile as sf
-        import numpy as np
+        import io
 
         ds = load_dataset('amu-cai/CAMEO', split=split_name)
+
+        # Disable automatic audio decoding (avoids torchcodec dependency)
+        if hasattr(ds, 'cast_column'):
+            from datasets import Audio
+            ds = ds.cast_column('audio', Audio(decode=False))
+
         target.mkdir(parents=True, exist_ok=True)
 
         count = 0
         for i, sample in enumerate(ds):
             emotion = sample['emotion']
             audio = sample['audio']
-            sr = audio['sampling_rate']
-            array = np.array(audio['array'], dtype=np.float32)
 
             emo_dir = target / emotion
             emo_dir.mkdir(parents=True, exist_ok=True)
             wav_path = emo_dir / f'{split_name}_{i:05d}.wav'
-            sf.write(str(wav_path), array, sr)
+
+            if isinstance(audio, dict) and 'bytes' in audio and audio['bytes']:
+                wav_path.write_bytes(audio['bytes'])
+            elif isinstance(audio, dict) and 'path' in audio and audio['path']:
+                shutil.copy2(audio['path'], wav_path)
+            elif isinstance(audio, dict) and 'array' in audio:
+                import numpy as np
+                array = np.array(audio['array'], dtype=np.float32)
+                sf.write(str(wav_path), array, audio['sampling_rate'])
+            else:
+                print(f'  [WARN] Could not extract audio for sample {i}')
+                continue
             count += 1
 
         print(f'  [OK] CAMEO-{split_name}: {count} wav files -> {target}')
