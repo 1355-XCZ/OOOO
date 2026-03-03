@@ -64,22 +64,15 @@ CODEBOOK_TYPE_STYLES = {
         'ls': '-',
         'lw': 2.5,
     },
-    'biased_all': {
-        'label': 'Biased (all)',
-        'color': '#7B1FA2',
-        'marker': 's',
-        'ls': '-',
-        'lw': 2.5,
-    },
     'biased_matched': {
-        'label': 'Biased (matched)',
+        'label': 'Emotion-specific (matched)',
         'color': '#1E88E5',
         'marker': '^',
         'ls': '--',
         'lw': 1.8,
     },
     'biased_unmatched': {
-        'label': 'Biased (unmatched)',
+        'label': 'Emotion-specific (unmatched)',
         'color': '#E53935',
         'marker': 'v',
         'ls': '--',
@@ -252,7 +245,8 @@ def _plot_figure(target_ssl: str, output_path: Path, free_scale: bool = False):
 
     # ---- (a) SER Recall: 2 subplots ----
     for col_idx, (ssl, config, title) in enumerate(ssl_configs):
-        ax = fig.add_subplot(gs_ser[col_idx])
+        share_ax = ser_axes[0] if (col_idx > 0 and not free_scale) else None
+        ax = fig.add_subplot(gs_ser[col_idx], sharey=share_ax)
         ser_axes.append(ax)
         data = _load_ser_ood_avg(config, ssl)
 
@@ -282,7 +276,10 @@ def _plot_figure(target_ssl: str, output_path: Path, free_scale: bool = False):
         ax.set_title(title, fontsize=14, fontweight='bold')
         ax.set_xlabel('RVQ Layer', fontsize=12)
         if col_idx == 0:
-            ax.set_ylabel('SER Recall-Macro', fontsize=13)
+            ax.set_ylabel('SER Recall', fontsize=13)
+        elif not free_scale:
+            import matplotlib.pyplot as plt
+            plt.setp(ax.get_yticklabels(), visible=False)
         ax.set_xticks(layers[::2])
         ax.set_xlim(0.5, NUM_LAYERS + 0.5)
         ax.tick_params(axis='both', labelsize=11)
@@ -352,7 +349,7 @@ def _plot_figure(target_ssl: str, output_path: Path, free_scale: bool = False):
             ax_merge.text(0.5, 0.5, 'No data', ha='center', va='center',
                           transform=ax_merge.transAxes, fontsize=14)
 
-        ax_merge.set_title(f'Biased Merged ({ssl_label})', fontsize=13, fontweight='bold')
+        ax_merge.set_title(f'Emo-specific Merged ({ssl_label})', fontsize=13, fontweight='bold')
         ax_merge.set_xlabel('RVQ Layer', fontsize=11)
         ax_merge.set_xticks(layers[::2])
         ax_merge.set_xlim(0.5, NUM_LAYERS + 0.5)

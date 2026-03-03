@@ -2,7 +2,10 @@
 """
 Train Balanced Codebook
 
-Balanced codebook: equal sampling from each emotion, total training data matches the biased codebook.
+Balanced codebook: equal sampling from each emotion.
+
+When no --total-samples or --samples-per-emotion is given, defaults to
+total = min(emotion counts), matching the smallest biased codebook's budget.
 """
 
 import json
@@ -73,7 +76,12 @@ def main():
     parser.add_argument('--output-dir', type=str, default=str(CODEBOOK_DIR))
     parser.add_argument('--codebook-config', type=str, default=None,
                         help='Codebook config tag (e.g. 2x32). Auto-derived from num-layers/codebook-size if omitted.')
-    parser.add_argument('--samples-per-emotion', type=int, default=None)
+    parser.add_argument('--samples-per-emotion', type=int, default=None,
+                        help='Samples per emotion (total = N * n_emotions). Ignored when --total-samples is set.')
+    parser.add_argument('--total-samples', type=int, default=None,
+                        help='Total training samples across all emotions. '
+                             'Overrides --samples-per-emotion. Each emotion gets total // n_emotions. '
+                             'If omitted, defaults to min(emotion_counts) to match the smallest biased codebook.')
     parser.add_argument('--num-epochs', type=int, default=DEFAULT_NUM_EPOCHS)
     parser.add_argument('--batch-size', type=int, default=DEFAULT_BATCH_SIZE)
     parser.add_argument('--learning-rate', type=float, default=DEFAULT_LEARNING_RATE)
@@ -137,12 +145,18 @@ def main():
 
     n_emotions = len(train_splits)
 
-    if args.samples_per_emotion:
+    if args.total_samples:
+        total_samples = args.total_samples
+        samples_per_emotion = total_samples // n_emotions
+        logger.info(f"Explicit total budget: total={total_samples}, {samples_per_emotion}/emotion x {n_emotions}")
+    elif args.samples_per_emotion:
         samples_per_emotion = args.samples_per_emotion
         total_samples = samples_per_emotion * n_emotions
     else:
         total_samples = min_samples
         samples_per_emotion = total_samples // n_emotions
+        logger.info(f"Auto fair-budget: total={total_samples} (= min emotion count), "
+                     f"{samples_per_emotion}/emotion x {n_emotions}")
 
     logger.info(f"Balanced: {samples_per_emotion}/emotion x {n_emotions} = {total_samples} total")
 

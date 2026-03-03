@@ -9,15 +9,15 @@
 #SBATCH --time=04:00:00
 #SBATCH --output=paper_pipeline/slurm/logs/rq4_eval_%A_%a.out
 #SBATCH --error=paper_pipeline/slurm/logs/rq4_eval_%A_%a.err
-#SBATCH --array=0-91
+#SBATCH --array=0-31
 
-# 23 configs × 4 sources = 92 tasks
-# Full evaluate_unified.py --phase all for every (config, source) pair
+# 8 configs × 4 sources = 32 tasks
+# Each task evaluates ALL codebook types and saves per-sample data + 9-method results.
 
-source "$(dirname "$0")/env.sh"
+source "${SLURM_SUBMIT_DIR}/paper_pipeline/slurm/env.sh"
 set -e
 
-CONFIGS=(2x16 2x24 2x32 2x48 2x64 2x128 2x256 4x16 4x32 8x24 16x16 16x24 16x32 32x8 64x8 128x8 128x12 128x16 128x24 256x12 512x16 1024x16 2048x16)
+CONFIGS=(2x32 2x64 2x128 4x32 32x8 64x8 128x8 512x16)
 SOURCES=(esd_en iemocap ravdess cremad)
 
 N_SOURCES=${#SOURCES[@]}

@@ -23,7 +23,7 @@
 # Usage: sbatch --array=0-35 rq2_ser_eval.slurm
 # ==============================================================
 
-source "$(dirname "$0")/env.sh"
+source "${SLURM_SUBMIT_DIR}/paper_pipeline/slurm/env.sh"
 
 TASK_ID=${SLURM_ARRAY_TASK_ID}
 DATASETS=(esd_en iemocap ravdess cremad)

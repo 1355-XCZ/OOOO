@@ -11,36 +11,35 @@
 #SBATCH --error=paper_pipeline/slurm/logs/rq3_1_mix_%A_%a.err
 
 # ==============================================================
-# RQ3.1: Train mixed-ratio codebooks for 3 SSL models
+# RQ3: Train mixed-ratio codebooks for 2 SSL models
 #
-# 3 SSL × 4 datasets × 4 emotions × 3 ratios = 144 tasks
+# 2 SSL × 4 datasets × 4 emotions × 2 ratios = 64 tasks
 #
-# Per SSL (48 tasks):
-#   Per dataset (12 tasks): 4 emotions × 3 ratios
+# Per SSL (32 tasks):
+#   Per dataset (8 tasks): 4 emotions × 2 ratios
 #   Datasets: esd_en, iemocap, ravdess, cremad
 #   Emotions: angry, happy, neutral, sad
-#   Ratios:   0.80, 0.95, 0.99
+#   Ratios:   0.95, 0.99
 #
-# Array mapping (0-143):
-#   0-47:   e2v     2x24
-#   48-95:  hubert  1024x24
-#   96-143: wavlm   1024x24
+# Array mapping (0-63):
+#   0-31:  e2v     2x24
+#   32-63: hubert  1024x24
 #
-# Usage: sbatch --array=0-143 train_rq3_1_mixed.slurm
+# Usage: sbatch --array=0-63 train_rq3_1_mixed.slurm
 # ==============================================================
 
-source "$(dirname "$0")/env.sh"
+source "${SLURM_SUBMIT_DIR}/paper_pipeline/slurm/env.sh"
 
 TASK_ID=${SLURM_ARRAY_TASK_ID}
 DATASETS=(esd_en iemocap ravdess cremad)
 EMOTIONS=(angry happy neutral sad)
-RATIOS=(0.80 0.95 0.99)
+RATIOS=(0.95 0.99)
 
-SSL_IDX=$(( TASK_ID / 48 ))
-LOCAL=$(( TASK_ID % 48 ))
-DS_IDX=$(( LOCAL / 12 ))
-EMO_IDX=$(( (LOCAL % 12) / 3 ))
-RATIO_IDX=$(( LOCAL % 3 ))
+SSL_IDX=$(( TASK_ID / 32 ))
+LOCAL=$(( TASK_ID % 32 ))
+DS_IDX=$(( LOCAL / 8 ))
+EMO_IDX=$(( (LOCAL % 8) / 2 ))
+RATIO_IDX=$(( LOCAL % 2 ))
 
 DS=${DATASETS[$DS_IDX]}
 EMO=${EMOTIONS[$EMO_IDX]}
@@ -49,7 +48,6 @@ RATIO=${RATIOS[$RATIO_IDX]}
 case $SSL_IDX in
     0) SSL="e2v";    CB_SIZE=2;    N_LAYERS=24 ;;
     1) SSL="hubert"; CB_SIZE=1024; N_LAYERS=24 ;;
-    2) SSL="wavlm";  CB_SIZE=1024; N_LAYERS=24 ;;
 esac
 
 echo "Task $TASK_ID: ssl=$SSL dataset=$DS emotion=$EMO ratio=$RATIO"

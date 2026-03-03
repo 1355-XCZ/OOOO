@@ -1,13 +1,13 @@
 #!/bin/bash
-#SBATCH --job-name=rq4_f1
+#SBATCH --job-name=rq4_ratio_f1
 #SBATCH --partition=sapphire
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=2
-#SBATCH --mem=8G
-#SBATCH --time=00:30:00
-#SBATCH --output=paper_pipeline/slurm/logs/rq4_f1_%A_%a.out
-#SBATCH --error=paper_pipeline/slurm/logs/rq4_f1_%A_%a.err
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=32G
+#SBATCH --time=01:00:00
+#SBATCH --output=paper_pipeline/slurm/logs/rq4_ratio_f1_%A_%a.out
+#SBATCH --error=paper_pipeline/slurm/logs/rq4_ratio_f1_%A_%a.err
 #SBATCH --array=0-31
 
 # 8 configs × 4 sources = 32 tasks (CPU only)
@@ -27,7 +27,7 @@ SOURCE="${SOURCES[$SRC_IDX]}"
 
 echo "Task ${SLURM_ARRAY_TASK_ID}: config=${CB_CONFIG}, source=${SOURCE}"
 
-python -m paper_pipeline.evaluators.rq4_compute_f1 \
+python -m paper_pipeline.evaluators.rq4_ratio_compute_f1 \
     --codebook-config "${CB_CONFIG}" \
     --codebook-source "${SOURCE}"
 

@@ -2,9 +2,11 @@
 """
 RQ4 Table -- Unified Method Comparison across Codebook Structures
 
-Reads rq4_f1/{config}/{source}.json results and generates a LaTeX table.
+Generates two LaTeX tables (Option A):
+  Table 1 (100/0 = biased):  from rq4_f1/{config}/{source}.json
+  Table 2 (99/1 = mixed_r99): from rq4_ratio/{config}/{source}/methods_f1.json
 
-Rows:    codebook structures (e.g., 2x16, 2x24, ...)
+Rows:    codebook structures (8 selected)
 Columns: N (total codes), BL, BalLS, BalSel, Unfilt, Filt, FltFBLS, FltFBs, UnfID, FiltID
 
 Values:  OOD Macro-F1 (%) averaged over 4 sources × 4 OOD datasets
@@ -26,19 +28,11 @@ sys.path.insert(0, str(PIPELINE_DIR))
 from config import RESULTS_DIR, PAPER_FIGURES_DIR, ID_DATASETS
 
 RQ4_DIR = RESULTS_DIR / 'rq4_f1'
+RQ4_RATIO_DIR = RESULTS_DIR / 'rq4_ratio'
 
 CONFIGS_ORDER = [
-    '2x16', '2x24', '2x32', '2x48', '2x64', '2x128', '2x256',
-    '4x16', '4x32',
-    '8x24',
-    '16x16', '16x24', '16x32',
-    '32x8',
-    '64x8',
-    '128x8', '128x12', '128x16', '128x24',
-    '256x12',
-    '512x16',
-    '1024x16',
-    '2048x16',
+    '2x32', '2x64', '2x128', '4x32',
+    '32x8', '64x8', '128x8', '512x16',
 ]
 
 METHOD_MAP = [
@@ -48,6 +42,18 @@ METHOD_MAP = [
     ('Unfilt',  'Unfilt'),
     ('Filt',    'Filt'),
     ('FltFBLS', 'Filt_FBLS'),
+    ('FltFBs',  'Filt_FBsel'),
+    ('UnfID',   'Unfilt_ID'),
+    ('FiltID',  'Filt_ID'),
+]
+
+RATIO_METHOD_MAP = [
+    ('BL',      'Baseline'),
+    ('BalLS',   'Bal_LS'),
+    ('BalSel',  'Bal_Select'),
+    ('Unfilt',  'Unfilt'),
+    ('Filt',    'Filt'),
+    ('FltFBLS', 'Filt_FB_LS'),
     ('FltFBs',  'Filt_FBsel'),
     ('UnfID',   'Unfilt_ID'),
     ('FiltID',  'Filt_ID'),
@@ -317,31 +323,88 @@ def _write_delta_json(delta: Dict, path: Path):
     print(f"  Saved: {path}")
 
 
+def _load_ratio_config_avg_f1(config: str, cb_type: str = 'mixed_r99') -> Dict[str, float]:
+    """Load and average F1 across 4 sources for one config from ratio results."""
+    method_vals = {display: [] for display, _ in RATIO_METHOD_MAP}
+
+    for source in ID_DATASETS:
+        p = RQ4_RATIO_DIR / config / source / 'methods_f1.json'
+        if not p.exists():
+            continue
+        with open(p) as f:
+            data = json.load(f)
+        type_data = data.get(cb_type, {})
+        ood_avg = type_data.get('ood_avg', {})
+        for display, internal in RATIO_METHOD_MAP:
+            val = ood_avg.get(internal, None)
+            if val is not None:
+                method_vals[display].append(val)
+
+    result = {}
+    for display, _ in RATIO_METHOD_MAP:
+        vals = method_vals[display]
+        result[display] = float(np.mean(vals)) * 100 if vals else None
+    return result
+
+
+def _collect_ratio(cb_type: str = 'mixed_r99') -> Dict[str, Dict[str, float]]:
+    """Collect ratio table data."""
+    table = {}
+    for config in CONFIGS_ORDER:
+        row = _load_ratio_config_avg_f1(config, cb_type)
+        if any(v is not None for v in row.values()):
+            table[config] = row
+    return table
+
+
 def run(dry_run=False):
     PAPER_FIGURES_DIR.mkdir(parents=True, exist_ok=True)
 
     if dry_run:
-        print("  [DRY RUN] Would generate rq4_table.{txt,csv,tex,json} + rq4_delta.{...}")
+        print("  [DRY RUN] Would generate rq4_table.{txt,csv,tex,json}")
+        print("  [DRY RUN] Would generate rq4_delta.{txt,csv,tex,json}")
+        print("  [DRY RUN] Would generate rq4_ratio_r99_table.{txt,csv,tex,json}")
+        print("  [DRY RUN] Would generate rq4_ratio_r99_delta.{txt,csv,tex,json}")
         return
 
+    # --- Table 1: biased (100/0) ---
     table = _collect_all()
-    if not table:
-        print("  [WARNING] No RQ4 F1 data found. Run evaluations first.")
-        return
+    if table:
+        base = PAPER_FIGURES_DIR / 'rq4_table'
+        _write_txt(table, base.with_suffix('.txt'))
+        _write_csv(table, base.with_suffix('.csv'))
+        _write_latex(table, base.with_suffix('.tex'))
+        _write_json(table, base.with_suffix('.json'))
 
-    base = PAPER_FIGURES_DIR / 'rq4_table'
-    _write_txt(table, base.with_suffix('.txt'))
-    _write_csv(table, base.with_suffix('.csv'))
-    _write_latex(table, base.with_suffix('.tex'))
-    _write_json(table, base.with_suffix('.json'))
+        delta = _build_delta_table(table)
+        dbase = PAPER_FIGURES_DIR / 'rq4_delta'
+        print()
+        _write_delta_txt(delta, dbase.with_suffix('.txt'))
+        _write_delta_csv(delta, dbase.with_suffix('.csv'))
+        _write_delta_latex(delta, dbase.with_suffix('.tex'))
+        _write_delta_json(delta, dbase.with_suffix('.json'))
+    else:
+        print("  [WARNING] No RQ4 F1 data found (100/0). Run evaluations first.")
 
-    delta = _build_delta_table(table)
-    dbase = PAPER_FIGURES_DIR / 'rq4_delta'
-    print()
-    _write_delta_txt(delta, dbase.with_suffix('.txt'))
-    _write_delta_csv(delta, dbase.with_suffix('.csv'))
-    _write_delta_latex(delta, dbase.with_suffix('.tex'))
-    _write_delta_json(delta, dbase.with_suffix('.json'))
+    # --- Table 2: mixed_r99 (99/1) ---
+    ratio_table = _collect_ratio('mixed_r99')
+    if ratio_table:
+        print("\n--- RQ4 Ratio 99/1 Table ---")
+        rbase = PAPER_FIGURES_DIR / 'rq4_ratio_r99_table'
+        _write_txt(ratio_table, rbase.with_suffix('.txt'))
+        _write_csv(ratio_table, rbase.with_suffix('.csv'))
+        _write_latex(ratio_table, rbase.with_suffix('.tex'))
+        _write_json(ratio_table, rbase.with_suffix('.json'))
+
+        rdelta = _build_delta_table(ratio_table)
+        rdbase = PAPER_FIGURES_DIR / 'rq4_ratio_r99_delta'
+        print()
+        _write_delta_txt(rdelta, rdbase.with_suffix('.txt'))
+        _write_delta_csv(rdelta, rdbase.with_suffix('.csv'))
+        _write_delta_latex(rdelta, rdbase.with_suffix('.tex'))
+        _write_delta_json(rdelta, rdbase.with_suffix('.json'))
+    else:
+        print("  [WARNING] No RQ4 ratio (99/1) data found. Run ratio evaluations first.")
 
 
 def description():

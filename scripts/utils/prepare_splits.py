@@ -19,7 +19,7 @@ import argparse
 EXP_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(EXP_ROOT))
 
-from configs.constants import GLOBAL_SEED, COLLAB_DATA_ROOT
+from configs.constants import GLOBAL_SEED
 from configs.dataset_config import (
     DATASET_CONFIGS, get_enabled_datasets, 
     TrainingConfig, DEFAULT_TRAINING_CONFIG,
@@ -211,7 +211,7 @@ def load_msp_files(config) -> Dict[str, List[str]]:
     data_root = Path(config.data_root)
     files_by_emotion = defaultdict(list)
     
-    json_path = Path(COLLAB_DATA_ROOT) / 'msp_ambigous.json'
+    json_path = Path(config.data_root) / 'msp_ambigous.json'
     
     if not json_path.exists():
         print(f"Warning: MSP JSON file not found: {json_path}")
@@ -534,8 +534,8 @@ def main():
         test_only = args.test_only
     else:
         datasets = list(get_enabled_datasets().keys())
-        # Exclude CAMEO and Emilia variants; only process core datasets
-        datasets = [d for d in datasets if not d.startswith('cameo_') and not d.startswith('emilia')]
+        # Exclude CAMEO datasets (test-only, handled separately)
+        datasets = [d for d in datasets if not d.startswith('cameo_')]
         test_only = args.test_only
     
     print("="*60)

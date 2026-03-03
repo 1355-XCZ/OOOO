@@ -12,6 +12,8 @@ appropriate classification head on features quantized by four codebook types:
   - biased_all:        each biased codebook tested on ALL emotions fairly,
                        per-codebook metrics averaged across 4 codebooks
 
+Also outputs per-codebook × per-emotion × per-layer recall for the RQ2 grid figure.
+
 Supports multiple SSL models (e2v, hubert, wavlm) and codebook configs.
 
 Output per (ssl_model, codebook_dataset, test_dataset) pair:
@@ -162,6 +164,21 @@ def compute_metrics(pairs: List[Tuple[str, str]]) -> Dict[str, float]:
     }
 
 
+def compute_per_emotion_recall(
+    pairs: List[Tuple[str, str]], emotions: List[str],
+) -> Dict[str, float]:
+    """Compute per-class recall for each emotion from (true, pred) pairs."""
+    result = {}
+    for emo in emotions:
+        true_count = sum(1 for t, _ in pairs if t == emo)
+        if true_count == 0:
+            result[emo] = 0.0
+        else:
+            correct = sum(1 for t, p in pairs if t == emo and p == emo)
+            result[emo] = correct / true_count
+    return result
+
+
 # ------------------------------------------------------------------
 # Matched / Unmatched / Balanced evaluation
 # ------------------------------------------------------------------
@@ -187,15 +204,16 @@ def evaluate_matched_unmatched_balanced(
     results = {}
 
     # --- Balanced ---
+    balanced_lp = None
     if balanced_codebook is not None:
         logger.info("Evaluating balanced codebook...")
-        layer_pairs = evaluate_codebook_on_samples(
+        balanced_lp = evaluate_codebook_on_samples(
             balanced_codebook, filtered_samples, e2v_head,
             valid_indices, valid_e2v_labels, num_layers, device,
             desc="Balanced",
         )
         results['balanced'] = {
-            f'layer_{l}': compute_metrics(layer_pairs.get(l, []))
+            f'layer_{l}': compute_metrics(balanced_lp.get(l, []))
             for l in range(1, num_layers + 1)
         }
 
@@ -261,6 +279,21 @@ def evaluate_matched_unmatched_balanced(
             'num_samples': sum(m['num_samples'] for m in per_cb_metrics),
         }
     results['biased_all'] = biased_all_results
+
+    # --- Per-codebook × per-emotion × per-layer recall (for RQ2 grid figure) ---
+    pcr = {}
+    if balanced_lp is not None:
+        pcr['balanced'] = {
+            f'layer_{l}': compute_per_emotion_recall(balanced_lp.get(l, []), eval_emotions)
+            for l in range(1, num_layers + 1)
+        }
+    for cb_emo in eval_emotions:
+        cb_lp = biased_all_per_cb.get(cb_emo, {})
+        pcr[f'biased_{cb_emo}'] = {
+            f'layer_{l}': compute_per_emotion_recall(cb_lp.get(l, []), eval_emotions)
+            for l in range(1, num_layers + 1)
+        }
+    results['per_codebook_per_emotion_recall'] = pcr
 
     return results
 

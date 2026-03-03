@@ -11,7 +11,7 @@ from typing import Dict, List, Optional
 from configs.constants import (
     GLOBAL_SEED, DEFAULT_NUM_EPOCHS, DEFAULT_BATCH_SIZE, DEFAULT_LEARNING_RATE,
     DEFAULT_PATIENCE, DEFAULT_MIN_DELTA, DEFAULT_TRAIN_RATIO, DEFAULT_VAL_RATIO,
-    DATA_ROOT, COLLAB_DATA_ROOT, E2V_MODEL_PATH as _E2V_MODEL_PATH,
+    DATA_ROOT, E2V_MODEL_PATH as _E2V_MODEL_PATH,
 )
 
 # Official emotion2vec 9-class labels
@@ -22,7 +22,6 @@ E2V_LABEL_TO_IDX = {label: idx for idx, label in enumerate(E2V_LABELS)}
 E2V_MODEL_PATH = _E2V_MODEL_PATH
 
 _DATA_ROOT = DATA_ROOT
-_COLLAB_ROOT = COLLAB_DATA_ROOT
 
 
 @dataclass
@@ -137,6 +136,30 @@ DATASET_CONFIGS: Dict[str, DatasetConfig] = {
         },
         enabled=True,
     ),
+    'cremad_clear': DatasetConfig(
+        name='CREMA-D (clear, 100% agreement)',
+        data_root=f'{_DATA_ROOT}/CREMA-D',
+        emotions=['angry', 'happy', 'neutral', 'sad'],
+        emotion_to_e2v={
+            'angry': 'angry',
+            'happy': 'happy',
+            'neutral': 'neutral',
+            'sad': 'sad',
+        },
+        enabled=True,
+    ),
+    'cremad_ambig': DatasetConfig(
+        name='CREMA-D (ambiguous, <100% agreement)',
+        data_root=f'{_DATA_ROOT}/CREMA-D',
+        emotions=['angry', 'happy', 'neutral', 'sad'],
+        emotion_to_e2v={
+            'angry': 'angry',
+            'happy': 'happy',
+            'neutral': 'neutral',
+            'sad': 'sad',
+        },
+        enabled=True,
+    ),
     
     'emodb': DatasetConfig(
         name='EmoDB',
@@ -156,7 +179,7 @@ DATASET_CONFIGS: Dict[str, DatasetConfig] = {
     
     'msp': DatasetConfig(
         name='MSP-Podcast',
-        data_root=_COLLAB_ROOT,
+        data_root=f'{_DATA_ROOT}/MSP',
         emotions=['Angry', 'Happy', 'Neutral', 'Sad', 'Surprise'],
         emotion_to_e2v={
             'Angry': 'angry',       # 0
@@ -166,56 +189,6 @@ DATASET_CONFIGS: Dict[str, DatasetConfig] = {
             'Surprise': 'surprised' # 7
         },
         enabled=True,
-    ),
-    
-    # Emilia: large-scale natural speech (100h), no emotion labels
-    # Used for comparison experiments with emotion dataset codebooks
-    # All E2V emotion mappings are set so OOD intersection equals the test dataset's full emotion set
-    'emilia': DatasetConfig(
-        name='Emilia',
-        data_root=f'{_DATA_ROOT}/emilia_features/emotion2vec',
-        emotions=['angry', 'disgusted', 'fearful', 'happy', 'neutral', 'sad', 'surprised'],
-        emotion_to_e2v={
-            'angry': 'angry',
-            'disgusted': 'disgusted',
-            'fearful': 'fearful',
-            'happy': 'happy',
-            'neutral': 'neutral',
-            'sad': 'sad',
-            'surprised': 'surprised',
-        },
-        enabled=True,
-    ),
-
-    # LibriTTS: large-scale English TTS corpus (no emotion labels)
-    # Used for comparison experiments with emotion dataset codebooks
-    'libritts': DatasetConfig(
-        name='LibriTTS',
-        data_root=f'{_DATA_ROOT}/LibriTTS/dev-clean',
-        emotions=['angry', 'disgusted', 'fearful', 'happy', 'neutral', 'sad', 'surprised'],
-        emotion_to_e2v={
-            'angry': 'angry',
-            'disgusted': 'disgusted',
-            'fearful': 'fearful',
-            'happy': 'happy',
-            'neutral': 'neutral',
-            'sad': 'sad',
-            'surprised': 'surprised',
-        },
-        enabled=True,
-    ),
-
-    # EmoVDB is skipped because amused/sleepy cannot be mapped
-    'emovdb': DatasetConfig(
-        name='EmoVDB',
-        data_root=f'{_DATA_ROOT}/EmoVDB',
-        emotions=['amused', 'angry', 'disgusted', 'neutral', 'sleepy'],
-        emotion_to_e2v={
-            'angry': 'angry',
-            'disgusted': 'disgusted',
-            'neutral': 'neutral',
-        },
-        enabled=False,
     ),
 
     # ============================================================
@@ -579,7 +552,7 @@ DATASET_FILE_PATTERNS = {
     },
     'msp': {
         # MSP reads from JSON file
-        'json_path': f'{_COLLAB_ROOT}/msp_ambigous.json',
+        'json_path': f'{_DATA_ROOT}/MSP/msp_ambigous.json',
     },
 }
 

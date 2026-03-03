@@ -290,9 +290,7 @@ def main():
 
     # ---- Determine codebook path ----
     # Unified convention: codebooks/{ssl_model}/{config}/{dataset}/
-    # Emilia codebook is saved as natural.pt; others as balanced.pt
-    NATURAL_DATASETS = {'emilia', 'libritts'}
-    ckpt_name = 'natural.pt' if args.codebook_dataset in NATURAL_DATASETS else 'balanced.pt'
+    ckpt_name = 'balanced.pt'
     codebook_base = Path(args.codebook_dir)
     if ssl_model == 'e2v':
         codebook_path = codebook_base / 'e2v' / args.codebook_config / args.codebook_dataset / ckpt_name

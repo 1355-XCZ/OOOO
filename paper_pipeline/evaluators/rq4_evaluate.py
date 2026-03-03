@@ -65,9 +65,8 @@ logger = logging.getLogger(__name__)
 ID_DATASETS = ['esd_en', 'iemocap', 'ravdess', 'cremad']
 
 EN_CAMEO = ['cameo_emns', 'cameo_enterface', 'cameo_jl_corpus']
-EN_STANDALONE = ['savee', 'tess', 'meld', 'asvp_esd']
 
-EN_OOD_DATASETS = ['msp'] + EN_CAMEO + EN_STANDALONE
+EN_OOD_DATASETS = ['msp'] + EN_CAMEO
 ALL_OOD_DATASETS = EN_OOD_DATASETS
 
 def get_ood_datasets(cb_source: str) -> list:

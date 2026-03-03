@@ -51,31 +51,16 @@ def _register(rq_id: str, description: str,
     }
 
 
-_register('1',   'RQ1: Balanced Codebook L2 + SER Recall (OOD, 4 configs)',
+_register('1',   'RQ1: Balanced Codebook Cosine Similarity + SER Recall (OOD, 3 SSL configs)',
+          evaluator='evaluators.rq1_evaluate',
           figure='figures.rq1')
 
-_register('2.1', 'RQ2.1: SER-F1 -- Matched vs Unmatched vs Balanced (e2v, OOD)',
-          evaluator='evaluators.rq2_1_matched_ser',
-          figure='figures.rq2_1')
-
-_register('2.2', 'RQ2.2: SSL comparison table (L2 + SER-F1, 128x8, Layer 8, OOD)',
-          evaluator='evaluators.rq2_2_ssl_table',
-          figure='figures.rq2_2')
-
-_register('2.3', 'RQ2.3: Codebook Token Entropy (OOD, 128x8, e2v)',
-          evaluator='evaluators.rq2_3_entropy',
-          figure='figures.rq2_3')
-
-_register('2', 'RQ2 Combined: SER-F1 + Entropy (e2v vs HuBERT/WavLM)',
+_register('2',   'RQ2 Combined: SER Recall + Entropy (e2v vs HuBERT/WavLM)',
           figure='figures.rq2_combined')
 
-_register('3.1', 'RQ3.1: Emotion Ratio Codebook (Cosine Sim + SER F1-Macro)',
-          evaluator='evaluators.rq3_1_ratio_table',
-          figure='figures.rq3_1')
-
-_register('3.2', 'RQ3.2: Annotator Ambiguity Codebook (Cosine Sim + SER F1-Macro)',
-          evaluator='evaluators.rq3_2_ambiguity_table',
-          figure='figures.rq3_2')
+_register('2.ce', 'RQ2/RQ3: Cross-Entropy Distribution Preservation (IEMOCAP voting, OOD)',
+          evaluator='evaluators.rq2_ce',
+          figure='figures.rq3_ratio_ambiguity_figure')
 
 _register('4',   'RQ4: e2v Codebook Structure Comparison (OOD Macro-F1)',
           evaluator='evaluators.rq4_compute_f1',

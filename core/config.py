@@ -124,6 +124,8 @@ DATASET_TO_FAIR_MAP = {
     'iemocap': {'angry': 'angry', 'happy': 'happy', 'neutral': 'neutral', 'sad': 'sad'},
     'ravdess': {'angry': 'angry', 'happy': 'happy', 'neutral': 'neutral', 'sad': 'sad'},
     'cremad':  {'angry': 'angry', 'happy': 'happy', 'neutral': 'neutral', 'sad': 'sad'},
+    'cremad_clear': {'angry': 'angry', 'happy': 'happy', 'neutral': 'neutral', 'sad': 'sad'},
+    'cremad_ambig': {'angry': 'angry', 'happy': 'happy', 'neutral': 'neutral', 'sad': 'sad'},
     'emodb':   {'anger': 'angry', 'happiness': 'happy', 'neutral': 'neutral', 'sadness': 'sad'},
     'msp':     {'Angry': 'angry', 'Happy': 'happy', 'Neutral': 'neutral', 'Sad': 'sad'},
     # CAMEO datasets -- all use CAMEO's unified label scheme

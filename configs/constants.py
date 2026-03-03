@@ -32,11 +32,6 @@ DATA_ROOT: str = os.environ.get(
     '/data/gpfs/projects/punim2341/haoguangzhou/data',
 )
 
-COLLAB_DATA_ROOT: str = os.environ.get(
-    'COLLAB_DATA_ROOT',
-    '/data/gpfs/projects/punim2341/wendaz/SFM-AER/data',
-)
-
 E2V_MODEL_PATH: str = os.environ.get(
     'E2V_MODEL_PATH',
     '/data/gpfs/projects/punim2341/haoguangzhou/cache/modelscope/models/iic/emotion2vec_plus_base/model.pt',
@@ -45,11 +40,6 @@ E2V_MODEL_PATH: str = os.environ.get(
 E2V_MODEL_DIR: str = os.environ.get(
     'E2V_MODEL_DIR',
     os.path.dirname(E2V_MODEL_PATH),
-)
-
-EMILIA_FEATURES_ROOT: str = os.environ.get(
-    'EMILIA_FEATURES_ROOT',
-    os.path.join(DATA_ROOT, 'emilia_features'),
 )
 
 # ============================================================

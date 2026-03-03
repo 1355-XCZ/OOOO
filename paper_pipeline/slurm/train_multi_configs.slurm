@@ -28,7 +28,7 @@
 # Usage: sbatch --array=0-79 train_multi_configs.slurm
 # ==============================================================
 
-source "$(dirname "$0")/env.sh"
+source "${SLURM_SUBMIT_DIR}/paper_pipeline/slurm/env.sh"
 
 TASK_ID=${SLURM_ARRAY_TASK_ID}
 DATASETS=(esd_en iemocap ravdess cremad)
@@ -50,16 +50,16 @@ esac
 
 echo "Task $TASK_ID: ssl=$SSL config=${CB_TAG} dataset=$DS cb_idx=$CB_IDX"
 
-COMMON_ARGS="--dataset $DS --ssl-model $SSL --codebook-size $CB_SIZE --num-layers $N_LAYERS --samples-per-emotion 500"
+COMMON_ARGS="--dataset $DS --ssl-model $SSL --codebook-size $CB_SIZE --num-layers $N_LAYERS"
 
 if [ $CB_IDX -eq 0 ]; then
-    echo "Training BALANCED codebook for $SSL / $DS (${CB_TAG})"
+    echo "Training BALANCED codebook for $SSL / $DS (${CB_TAG}) [fair budget: auto]"
     python scripts/train/train_balanced_codebook.py \
         $COMMON_ARGS --codebook-name balanced
 else
     EMO_IDX=$(( CB_IDX - 1 ))
     EMOTION=${EMOTIONS[$EMO_IDX]}
-    echo "Training BIASED codebook for $SSL / $DS / $EMOTION (${CB_TAG})"
+    echo "Training BIASED codebook for $SSL / $DS / $EMOTION (${CB_TAG}) [all available]"
     python scripts/train/train_biased_codebook.py \
         $COMMON_ARGS --emotion "$EMOTION"
 fi

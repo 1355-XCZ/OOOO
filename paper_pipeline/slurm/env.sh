@@ -3,7 +3,7 @@
 # Paper Pipeline -- Shared SLURM Environment
 #
 # Source this at the top of any paper_pipeline .slurm script:
-#   source "$(dirname "$0")/env.sh"
+#   source "${SLURM_SUBMIT_DIR}/paper_pipeline/slurm/env.sh"
 #
 # All paths are auto-detected from this script's location.
 # User-specific overrides go in local_config.sh (see template).
@@ -11,6 +11,9 @@
 
 # --- Auto-detect project layout from this script's location ---
 _SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [[ -n "${SLURM_SUBMIT_DIR}" && ! -f "${_SCRIPT_DIR}/env.sh" ]]; then
+    _SCRIPT_DIR="${SLURM_SUBMIT_DIR}/paper_pipeline/slurm"
+fi
 export EXP_ROOT="$(cd "${_SCRIPT_DIR}/../.." && pwd)"
 
 # --- Load user-specific overrides (venv path, data root, etc.) ---

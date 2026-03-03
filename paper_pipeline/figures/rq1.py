@@ -144,11 +144,12 @@ def _plot_figure(output_path: Path, free_scale: bool = False):
     import matplotlib.gridspec as gridspec
 
     n_ssl = len(CONFIGS)
-    fig = plt.figure(figsize=(6.0 * n_ssl * 2, 5.5))
+    sp_size = 2.6
+    fig = plt.figure(figsize=(sp_size * n_ssl * 2 + 2.0, sp_size + 1.6))
 
-    gs = gridspec.GridSpec(1, 2, figure=fig, wspace=0.18)
-    gs_cos = gridspec.GridSpecFromSubplotSpec(1, n_ssl, subplot_spec=gs[0], wspace=0.35)
-    gs_ser = gridspec.GridSpecFromSubplotSpec(1, n_ssl, subplot_spec=gs[1], wspace=0.35)
+    gs = gridspec.GridSpec(1, 2, figure=fig, wspace=0.30)
+    gs_cos = gridspec.GridSpecFromSubplotSpec(1, n_ssl, subplot_spec=gs[0], wspace=0.12)
+    gs_ser = gridspec.GridSpecFromSubplotSpec(1, n_ssl, subplot_spec=gs[1], wspace=0.12)
 
     layers = list(range(1, NUM_LAYERS + 1))
 
@@ -195,8 +196,8 @@ def _plot_figure(output_path: Path, free_scale: bool = False):
                             color=EMOTION_COLORS[emo],
                             linestyle='-',
                             marker='o',
-                            linewidth=2.5,
-                            markersize=6)
+                            linewidth=1.8,
+                            markersize=3.5)
 
                 if data_key == 'recall':
                     ssl_bl = baselines.get(cfg['ssl'], {})
@@ -206,25 +207,26 @@ def _plot_figure(output_path: Path, free_scale: bool = False):
                                        color=EMOTION_COLORS[emo],
                                        linestyle=':', linewidth=1.2, alpha=0.45)
 
-            ax.set_title(cfg['label'], fontsize=15, fontweight='bold')
+            ax.set_title(cfg['label'], fontsize=11, fontweight='bold')
             if col_idx == 0:
-                ax.set_ylabel(ylabel, fontsize=13)
+                ax.set_ylabel(ylabel, fontsize=10)
             elif not free_scale:
                 plt.setp(ax.get_yticklabels(), visible=False)
-            ax.set_xlabel('RVQ Layer', fontsize=12)
+            ax.set_xlabel('RVQ Layer', fontsize=9)
             ax.set_xticks(layers[::2])
             ax.set_xlim(0.5, NUM_LAYERS + 0.5)
-            ax.tick_params(axis='both', labelsize=11)
+            ax.tick_params(axis='both', labelsize=8)
             ax.grid(True, alpha=0.3)
+            ax.set_box_aspect(1)
 
         section_axes[sec_title] = axes_in_section
 
     fig.legend(
-        [plt.Line2D([0], [0], color=EMOTION_COLORS[e], marker='o', linewidth=2.5, markersize=6)
+        [plt.Line2D([0], [0], color=EMOTION_COLORS[e], marker='o', linewidth=1.8, markersize=3.5)
          for e in FAIR_EMOTIONS],
         [EMOTION_DISPLAY[e] for e in FAIR_EMOTIONS],
-        loc='lower center', ncol=len(FAIR_EMOTIONS), fontsize=13,
-        bbox_to_anchor=(0.5, -0.08), frameon=False,
+        loc='lower center', ncol=len(FAIR_EMOTIONS), fontsize=10,
+        bbox_to_anchor=(0.5, -0.06), frameon=False,
     )
 
     fig.canvas.draw()
@@ -232,7 +234,7 @@ def _plot_figure(output_path: Path, free_scale: bool = False):
         left = axes_list[0].get_position().x0
         right = axes_list[-1].get_position().x1
         center_x = (left + right) / 2.0
-        fig.text(center_x, 1.03, sec_title, ha='center', fontsize=16, fontweight='bold',
+        fig.text(center_x, 1.02, sec_title, ha='center', fontsize=12, fontweight='bold',
                  transform=fig.transFigure)
 
     plt.subplots_adjust(bottom=0.15)
