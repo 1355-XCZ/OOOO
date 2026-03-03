@@ -172,40 +172,6 @@ def load_cremad_files(config) -> Dict[str, List[str]]:
     return dict(files_by_emotion)
 
 
-def load_emodb_files(config) -> Dict[str, List[str]]:
-    """Load EmoDB dataset files grouped by emotion."""
-    data_root = Path(config.data_root)
-    files_by_emotion = defaultdict(list)
-    
-    emotion_code_map = {
-        'W': 'anger', 'L': 'boredom', 'E': 'disgust',
-        'A': 'fear', 'F': 'happiness', 'N': 'neutral', 'T': 'sadness'
-    }
-    
-    # EmoDB may store wavs in a wav/ subdirectory
-    search_dirs = [data_root, data_root / 'wav']
-    
-    for search_dir in search_dirs:
-        if not search_dir.exists():
-            continue
-        wav_files = list(search_dir.glob('*.wav'))
-        for wav_file in wav_files:
-            # e.g. 03a01Wa.wav -> W is the emotion code
-            name = wav_file.stem
-            emotion_code = None
-            for i in range(len(name) - 1, -1, -1):
-                if name[i].isalpha() and name[i].upper() in emotion_code_map:
-                    emotion_code = name[i].upper()
-                    break
-            
-            if emotion_code and emotion_code in emotion_code_map:
-                emotion = emotion_code_map[emotion_code]
-                if emotion in config.emotions:
-                    files_by_emotion[emotion].append(str(wav_file))
-    
-    return dict(files_by_emotion)
-
-
 def load_msp_files(config) -> Dict[str, List[str]]:
     """Load MSP-Podcast dataset files grouped by emotion."""
     data_root = Path(config.data_root)
@@ -248,128 +214,6 @@ def load_msp_files(config) -> Dict[str, List[str]]:
     return dict(files_by_emotion)
 
 
-def load_savee_files(config) -> Dict[str, List[str]]:
-    """Load SAVEE dataset files grouped by emotion.
-
-    Filename format: {speaker}_{emotion_code}{number}.wav
-    Emotion codes: a=angry, d=disgust, f=fear, h=happy, n=neutral, sa=sad, su=surprise
-    """
-    data_root = Path(config.data_root)
-    files_by_emotion = defaultdict(list)
-
-    code_map = {
-        'a': 'angry', 'd': 'disgust', 'f': 'fear',
-        'h': 'happy', 'n': 'neutral', 'sa': 'sad', 'su': 'surprise',
-    }
-
-    for wav_file in sorted(data_root.glob('*.wav')):
-        name = wav_file.stem
-        parts = name.split('_', 1)
-        if len(parts) != 2:
-            continue
-        code_part = parts[1]
-        import re
-        m = re.match(r'^([a-z]+)', code_part)
-        if not m:
-            continue
-        code = m.group(1)
-        emotion = code_map.get(code)
-        if emotion and emotion in config.emotions:
-            files_by_emotion[emotion].append(str(wav_file))
-
-    return dict(files_by_emotion)
-
-
-def load_tess_files(config) -> Dict[str, List[str]]:
-    """Load TESS dataset files grouped by emotion.
-
-    Directory structure: {data_root}/{speaker}_{emotion}/*.wav
-    Speakers: OAF, YAF. Emotions extracted from folder name suffix.
-    """
-    data_root = Path(config.data_root)
-    files_by_emotion = defaultdict(list)
-
-    emo_map = {
-        'angry': 'angry', 'disgust': 'disgust', 'fear': 'fear',
-        'happy': 'happy', 'neutral': 'neutral', 'sad': 'sad',
-        'pleasant_surprise': 'surprise', 'pleasant_surprised': 'surprise',
-    }
-
-    for emo_dir in sorted(data_root.iterdir()):
-        if not emo_dir.is_dir():
-            continue
-        folder_lower = emo_dir.name.lower()
-        for suffix, emotion in emo_map.items():
-            if folder_lower.endswith(suffix):
-                if emotion in config.emotions:
-                    wav_files = sorted(emo_dir.glob('*.wav'))
-                    files_by_emotion[emotion].extend([str(f) for f in wav_files])
-                break
-
-    return dict(files_by_emotion)
-
-
-def load_meld_files(config) -> Dict[str, List[str]]:
-    """Load MELD dataset files grouped by emotion.
-
-    After audio extraction, structure: {data_root}/{emotion}/*.wav
-    Same as CAMEO-style loading.
-    """
-    data_root = Path(config.data_root)
-    files_by_emotion = defaultdict(list)
-
-    if not data_root.exists():
-        print(f"Warning: MELD audio directory not found: {data_root}")
-        return dict(files_by_emotion)
-
-    for emotion_dir in sorted(data_root.iterdir()):
-        if not emotion_dir.is_dir():
-            continue
-        emotion = emotion_dir.name
-        if emotion in config.emotions:
-            wav_files = sorted(emotion_dir.glob('*.wav'))
-            files_by_emotion[emotion].extend([str(f) for f in wav_files])
-
-    return dict(files_by_emotion)
-
-
-def load_asvp_esd_files(config) -> Dict[str, List[str]]:
-    """Load ASVP-ESD dataset files grouped by emotion.
-
-    Filename format: XX-XX-XX-XX-XX-XX-XX-XX-XX[...].wav
-    Field index 1 = vocal channel (01=speech, 02=non-speech)
-    Field index 2 = emotion code
-    Field index 8 = language (01=Chinese, 02=English, 04=French)
-
-    Filters: speech only (01) + English only (02).
-    """
-    data_root = Path(config.data_root)
-    files_by_emotion = defaultdict(list)
-
-    emo_code_map = {
-        '02': 'neutral', '03': 'happy', '04': 'sad', '05': 'angry',
-        '06': 'fearful', '07': 'disgust', '08': 'surprised',
-    }
-
-    for actor_dir in sorted(data_root.iterdir()):
-        if not actor_dir.is_dir():
-            continue
-        for wav_file in sorted(actor_dir.glob('*.wav')):
-            parts = wav_file.stem.split('-')
-            if len(parts) < 9:
-                continue
-            vocal_channel = parts[1]
-            emo_code = parts[2]
-            language = parts[8]
-            if vocal_channel != '01' or language != '02':
-                continue
-            emotion = emo_code_map.get(emo_code)
-            if emotion and emotion in config.emotions:
-                files_by_emotion[emotion].append(str(wav_file))
-
-    return dict(files_by_emotion)
-
-
 def load_cameo_files(config) -> Dict[str, List[str]]:
     """Load CAMEO dataset files grouped by emotion.
     
@@ -402,18 +246,11 @@ def load_dataset_files(dataset_name: str) -> Dict[str, List[str]]:
         return load_cameo_files(config)
     
     loaders = {
-        'esd': load_esd_files,
         'esd_en': lambda cfg: load_esd_files(cfg, speaker_filter=set(range(11, 21))),
-        'esd_zh': lambda cfg: load_esd_files(cfg, speaker_filter=set(range(1, 11))),
         'iemocap': load_iemocap_files,
         'ravdess': load_ravdess_files,
         'cremad': load_cremad_files,
-        'emodb': load_emodb_files,
         'msp': load_msp_files,
-        'savee': load_savee_files,
-        'tess': load_tess_files,
-        'meld': load_meld_files,
-        'asvp_esd': load_asvp_esd_files,
     }
     
     if dataset_name not in loaders:

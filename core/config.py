@@ -118,34 +118,16 @@ FAIR_E2V_INDICES = [0, 3, 4, 6]  # indices in E2V 9-class output
 # Dataset label -> fair-4 label mapping
 # (copied verbatim from evaluate_comprehensive_2x32.py L57-78)
 DATASET_TO_FAIR_MAP = {
-    'esd':     {'angry': 'angry', 'happy': 'happy', 'neutral': 'neutral', 'sad': 'sad'},
     'esd_en':  {'angry': 'angry', 'happy': 'happy', 'neutral': 'neutral', 'sad': 'sad'},
-    'esd_zh':  {'angry': 'angry', 'happy': 'happy', 'neutral': 'neutral', 'sad': 'sad'},
     'iemocap': {'angry': 'angry', 'happy': 'happy', 'neutral': 'neutral', 'sad': 'sad'},
     'ravdess': {'angry': 'angry', 'happy': 'happy', 'neutral': 'neutral', 'sad': 'sad'},
     'cremad':  {'angry': 'angry', 'happy': 'happy', 'neutral': 'neutral', 'sad': 'sad'},
     'cremad_clear': {'angry': 'angry', 'happy': 'happy', 'neutral': 'neutral', 'sad': 'sad'},
     'cremad_ambig': {'angry': 'angry', 'happy': 'happy', 'neutral': 'neutral', 'sad': 'sad'},
-    'emodb':   {'anger': 'angry', 'happiness': 'happy', 'neutral': 'neutral', 'sadness': 'sad'},
     'msp':     {'Angry': 'angry', 'Happy': 'happy', 'Neutral': 'neutral', 'Sad': 'sad'},
-    # CAMEO datasets -- all use CAMEO's unified label scheme
-    'cameo_crema_d':        {'anger': 'angry', 'happiness': 'happy', 'neutral': 'neutral', 'sadness': 'sad'},
-    'cameo_cafe':           {'anger': 'angry', 'happiness': 'happy', 'neutral': 'neutral', 'sadness': 'sad'},
-    'cameo_emns':           {'anger': 'angry', 'happiness': 'happy', 'neutral': 'neutral', 'sadness': 'sad'},
-    'cameo_emozionalmente': {'anger': 'angry', 'happiness': 'happy', 'neutral': 'neutral', 'sadness': 'sad'},
-    'cameo_enterface':      {'anger': 'angry', 'happiness': 'happy', 'sadness': 'sad'},  # no neutral
-    'cameo_jl_corpus':      {'anger': 'angry', 'happiness': 'happy', 'neutral': 'neutral', 'sadness': 'sad'},
-    'cameo_mesd':           {'anger': 'angry', 'happiness': 'happy', 'neutral': 'neutral', 'sadness': 'sad'},
-    'cameo_nemo':           {'anger': 'angry', 'happiness': 'happy', 'neutral': 'neutral', 'sadness': 'sad'},
-    'cameo_oreau':          {'anger': 'angry', 'happiness': 'happy', 'neutral': 'neutral', 'sadness': 'sad'},
-    'cameo_pavoque':        {'anger': 'angry', 'happiness': 'happy', 'neutral': 'neutral', 'sadness': 'sad'},
-    'cameo_ravdess':        {'anger': 'angry', 'happiness': 'happy', 'neutral': 'neutral', 'sadness': 'sad'},
-    'cameo_resd':           {'anger': 'angry', 'happiness': 'happy', 'neutral': 'neutral', 'sadness': 'sad'},
-    'cameo_subesco':        {'anger': 'angry', 'happiness': 'happy', 'neutral': 'neutral', 'sadness': 'sad'},
-    'savee':                {'angry': 'angry', 'happy': 'happy', 'neutral': 'neutral', 'sad': 'sad'},
-    'tess':                 {'angry': 'angry', 'happy': 'happy', 'neutral': 'neutral', 'sad': 'sad'},
-    'meld':                 {'anger': 'angry', 'joy': 'happy', 'neutral': 'neutral', 'sadness': 'sad'},
-    'asvp_esd':             {'angry': 'angry', 'happy': 'happy', 'neutral': 'neutral', 'sad': 'sad'},
+    'cameo_emns':      {'anger': 'angry', 'happiness': 'happy', 'neutral': 'neutral', 'sadness': 'sad'},
+    'cameo_enterface': {'anger': 'angry', 'happiness': 'happy', 'sadness': 'sad'},  # no neutral
+    'cameo_jl_corpus': {'anger': 'angry', 'happiness': 'happy', 'neutral': 'neutral', 'sadness': 'sad'},
 }
 
 # ============================================================
@@ -166,23 +148,11 @@ SSL_FEATURE_DIMS = {
 # Language metadata  (from various analysis scripts)
 # ============================================================
 DATASET_LANGUAGES = {
-    'esd': 'CN/EN', 'esd_en': 'EN', 'esd_zh': 'ZH', 'iemocap': 'EN', 'ravdess': 'EN',
-    'cremad': 'EN', 'emodb': 'DE', 'msp': 'EN',
-    'cameo_cafe': 'FR', 'cameo_crema_d': 'EN', 'cameo_emns': 'EN',
-    'cameo_emozionalmente': 'IT', 'cameo_enterface': 'EN',
-    'cameo_jl_corpus': 'EN', 'cameo_mesd': 'ES',
-    'cameo_nemo': 'PL', 'cameo_oreau': 'FR', 'cameo_pavoque': 'DE',
-    'cameo_ravdess': 'EN', 'cameo_resd': 'RU', 'cameo_subesco': 'BN',
-    'savee': 'EN', 'tess': 'EN', 'meld': 'EN',
-    'asvp_esd': 'EN',
+    'esd_en': 'EN', 'iemocap': 'EN', 'ravdess': 'EN', 'cremad': 'EN', 'msp': 'EN',
+    'cameo_emns': 'EN', 'cameo_enterface': 'EN', 'cameo_jl_corpus': 'EN',
 }
 
-# CAMEO dataset list  (from dataset_config.py L595-599)
-CAMEO_DATASETS = [
-    'cameo_crema_d', 'cameo_cafe', 'cameo_emns', 'cameo_emozionalmente',
-    'cameo_enterface', 'cameo_jl_corpus', 'cameo_mesd', 'cameo_nemo',
-    'cameo_oreau', 'cameo_pavoque', 'cameo_ravdess', 'cameo_resd', 'cameo_subesco',
-]
+CAMEO_DATASETS = ['cameo_emns', 'cameo_enterface', 'cameo_jl_corpus']
 
 
 # ============================================================
@@ -211,29 +181,13 @@ CODEBOOK_BIASED_MAP = {
 # Full dataset -> e2v label mapping (ALL emotions, not just 4-fair)
 DATASET_TO_FULL_MAP = {
     'esd_en':  {'angry': 'angry', 'happy': 'happy', 'neutral': 'neutral', 'sad': 'sad', 'surprise': 'surprised'},
-    'esd_zh':  {'angry': 'angry', 'happy': 'happy', 'neutral': 'neutral', 'sad': 'sad', 'surprise': 'surprised'},
     'iemocap': {'angry': 'angry', 'happy': 'happy', 'neutral': 'neutral', 'sad': 'sad'},
     'ravdess': {'angry': 'angry', 'disgust': 'disgusted', 'fearful': 'fearful', 'happy': 'happy', 'neutral': 'neutral', 'sad': 'sad', 'surprised': 'surprised'},
     'cremad':  {'angry': 'angry', 'disgust': 'disgusted', 'fear': 'fearful', 'happy': 'happy', 'neutral': 'neutral', 'sad': 'sad'},
     'msp':     {'Angry': 'angry', 'Happy': 'happy', 'Neutral': 'neutral', 'Sad': 'sad', 'Surprise': 'surprised'},
-    'emodb':   {'anger': 'angry', 'disgust': 'disgusted', 'fear': 'fearful', 'happiness': 'happy', 'neutral': 'neutral', 'sadness': 'sad'},
-    'cameo_crema_d':        {'anger': 'angry', 'disgust': 'disgusted', 'fear': 'fearful', 'happiness': 'happy', 'neutral': 'neutral', 'sadness': 'sad'},
-    'cameo_emns':           {'anger': 'angry', 'disgust': 'disgusted', 'happiness': 'happy', 'neutral': 'neutral', 'sadness': 'sad', 'surprise': 'surprised'},
-    'cameo_enterface':      {'anger': 'angry', 'disgust': 'disgusted', 'fear': 'fearful', 'happiness': 'happy', 'sadness': 'sad', 'surprise': 'surprised'},
-    'cameo_jl_corpus':      {'anger': 'angry', 'happiness': 'happy', 'neutral': 'neutral', 'sadness': 'sad'},
-    'cameo_ravdess':        {'anger': 'angry', 'disgust': 'disgusted', 'fear': 'fearful', 'happiness': 'happy', 'neutral': 'neutral', 'sadness': 'sad', 'surprise': 'surprised'},
-    'cameo_cafe':           {'anger': 'angry', 'disgust': 'disgusted', 'fear': 'fearful', 'happiness': 'happy', 'neutral': 'neutral', 'sadness': 'sad', 'surprise': 'surprised'},
-    'cameo_emozionalmente': {'anger': 'angry', 'disgust': 'disgusted', 'fear': 'fearful', 'happiness': 'happy', 'neutral': 'neutral', 'sadness': 'sad', 'surprise': 'surprised'},
-    'cameo_mesd':           {'anger': 'angry', 'disgust': 'disgusted', 'fear': 'fearful', 'happiness': 'happy', 'neutral': 'neutral', 'sadness': 'sad'},
-    'cameo_nemo':           {'anger': 'angry', 'fear': 'fearful', 'happiness': 'happy', 'neutral': 'neutral', 'sadness': 'sad', 'surprise': 'surprised'},
-    'cameo_oreau':          {'anger': 'angry', 'disgust': 'disgusted', 'fear': 'fearful', 'happiness': 'happy', 'neutral': 'neutral', 'sadness': 'sad', 'surprise': 'surprised'},
-    'cameo_pavoque':        {'anger': 'angry', 'happiness': 'happy', 'neutral': 'neutral', 'sadness': 'sad'},
-    'cameo_resd':           {'anger': 'angry', 'disgust': 'disgusted', 'fear': 'fearful', 'happiness': 'happy', 'neutral': 'neutral', 'sadness': 'sad'},
-    'cameo_subesco':        {'anger': 'angry', 'disgust': 'disgusted', 'fear': 'fearful', 'happiness': 'happy', 'neutral': 'neutral', 'sadness': 'sad', 'surprise': 'surprised'},
-    'savee':                {'angry': 'angry', 'happy': 'happy', 'neutral': 'neutral', 'sad': 'sad'},
-    'tess':                 {'angry': 'angry', 'happy': 'happy', 'neutral': 'neutral', 'sad': 'sad'},
-    'meld':                 {'anger': 'angry', 'joy': 'happy', 'neutral': 'neutral', 'sadness': 'sad'},
-    'asvp_esd':             {'angry': 'angry', 'disgust': 'disgusted', 'fearful': 'fearful', 'happy': 'happy', 'neutral': 'neutral', 'sad': 'sad', 'surprised': 'surprised'},
+    'cameo_emns':      {'anger': 'angry', 'disgust': 'disgusted', 'happiness': 'happy', 'neutral': 'neutral', 'sadness': 'sad', 'surprise': 'surprised'},
+    'cameo_enterface': {'anger': 'angry', 'disgust': 'disgusted', 'fear': 'fearful', 'happiness': 'happy', 'sadness': 'sad', 'surprise': 'surprised'},
+    'cameo_jl_corpus': {'anger': 'angry', 'happiness': 'happy', 'neutral': 'neutral', 'sadness': 'sad'},
 }
 
 

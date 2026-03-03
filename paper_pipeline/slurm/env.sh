@@ -23,9 +23,9 @@ if [[ -f "${_LOCAL_CFG}" ]]; then
 fi
 
 # --- Defaults (override via local_config.sh or environment) ---
-export VENV_PATH="${VENV_PATH:-/data/gpfs/projects/punim2341/haoguangzhou/venvs/vevo-source-fix}"
-export DATA_ROOT="${DATA_ROOT:-/data/gpfs/projects/punim2341/haoguangzhou/data}"
-export E2V_MODEL_PATH="${E2V_MODEL_PATH:-/data/gpfs/projects/punim2341/haoguangzhou/cache/modelscope/models/iic/emotion2vec_plus_base/model.pt}"
+export VENV_PATH="${VENV_PATH:-${EXP_ROOT}/.venv}"
+export DATA_ROOT="${DATA_ROOT:-${EXP_ROOT}/download}"
+export E2V_MODEL_PATH="${E2V_MODEL_PATH:-${EXP_ROOT}/download/models/emotion2vec_plus_base/model.pt}"
 export LOG_DIR="${LOG_DIR:-${EXP_ROOT}/paper_pipeline/slurm/logs}"
 
 # --- HPC modules ---

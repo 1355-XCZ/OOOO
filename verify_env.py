@@ -63,6 +63,10 @@ def check_dependencies():
         ("vector-quantize-pytorch", "vector_quantize_pytorch"),
         ("einops", "einops"),
         ("s3prl", "s3prl"),
+        ("gdown", "gdown"),
+        ("kagglehub", "kagglehub"),
+        ("datasets (HuggingFace)", "datasets"),
+        ("modelscope", "modelscope"),
     ]
     for display_name, import_name in deps:
         try:
@@ -141,8 +145,51 @@ def check_env_vars():
         warn("local_config.sh not found (copy from local_config.sh.template)")
 
 
+def check_datasets():
+    print("\n6. Dataset availability (under DATA_ROOT)")
+    from configs.constants import DATA_ROOT
+    data_root = Path(DATA_ROOT)
+
+    if not data_root.exists():
+        warn(f"DATA_ROOT does not exist: {data_root}")
+        warn("Run: python scripts/utils/download_datasets.py --all")
+        return
+
+    ok(f"DATA_ROOT = {data_root}")
+
+    dataset_dirs = {
+        'ESD (esd_en)':         data_root / 'ESD' / 'Emotion Speech Dataset',
+        'IEMOCAP':              data_root / 'IEMOCAP_full_release',
+        'RAVDESS':              data_root / 'RAVDESS',
+        'CREMA-D':              data_root / 'CREMA-D',
+        'MSP-Podcast':          data_root / 'MSP',
+        'CAMEO-EMNS':           data_root / 'CAMEO' / 'emns',
+        'CAMEO-EnterFace':      data_root / 'CAMEO' / 'enterface',
+        'CAMEO-JL-Corpus':      data_root / 'CAMEO' / 'jl_corpus',
+    }
+
+    for name, path in dataset_dirs.items():
+        if path.exists():
+            wav_count = len(list(path.rglob('*.wav')))
+            if wav_count > 0:
+                ok(f"{name:20s} {wav_count:>5d} wav files")
+            else:
+                warn(f"{name:20s} exists but no wav files found")
+        else:
+            warn(f"{name:20s} NOT FOUND at {path}")
+
+    model_path = Path(os.environ.get('E2V_MODEL_PATH', ''))
+    if not model_path.name:
+        from configs.constants import E2V_MODEL_PATH
+        model_path = Path(E2V_MODEL_PATH)
+    if model_path.exists():
+        ok(f"emotion2vec model found")
+    else:
+        warn(f"emotion2vec model NOT FOUND at {model_path}")
+
+
 def check_cuda():
-    print("\n6. CUDA availability")
+    print("\n7. CUDA availability")
     try:
         import torch
         if torch.cuda.is_available():
@@ -163,6 +210,7 @@ def main():
     check_project_modules()
     check_rq_registry()
     check_env_vars()
+    check_datasets()
     check_cuda()
 
     print("\n" + "=" * 60)

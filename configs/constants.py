@@ -5,6 +5,9 @@ Every magic number, default path, and shared parameter lives HERE.
 All other modules import from this file — never hardcode these values elsewhere.
 """
 import os
+from pathlib import Path
+
+_EXP_ROOT = Path(__file__).resolve().parent.parent
 
 # ============================================================
 # Reproducibility
@@ -29,12 +32,12 @@ DEFAULT_MAX_SAMPLES: int = 200
 # ============================================================
 DATA_ROOT: str = os.environ.get(
     'DATA_ROOT',
-    '/data/gpfs/projects/punim2341/haoguangzhou/data',
+    str(_EXP_ROOT / 'download'),
 )
 
 E2V_MODEL_PATH: str = os.environ.get(
     'E2V_MODEL_PATH',
-    '/data/gpfs/projects/punim2341/haoguangzhou/cache/modelscope/models/iic/emotion2vec_plus_base/model.pt',
+    str(_EXP_ROOT / 'download' / 'models' / 'emotion2vec_plus_base' / 'model.pt'),
 )
 
 E2V_MODEL_DIR: str = os.environ.get(

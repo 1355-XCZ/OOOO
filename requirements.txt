@@ -26,3 +26,9 @@ einops>=0.6
 
 # --- Visualization (paper figure generation) ---
 matplotlib>=3.7
+
+# --- Dataset download (used by scripts/utils/download_datasets.py) ---
+gdown>=5.0
+kagglehub>=0.3
+datasets>=2.18
+modelscope>=1.10

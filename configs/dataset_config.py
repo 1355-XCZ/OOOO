@@ -50,20 +50,6 @@ class DatasetConfig:
 # ============================================================
 
 DATASET_CONFIGS: Dict[str, DatasetConfig] = {
-    'esd': DatasetConfig(
-        name='ESD',
-        data_root=f'{_DATA_ROOT}/ESD/Emotion Speech Dataset',
-        emotions=['angry', 'happy', 'neutral', 'sad', 'surprise'],
-        emotion_to_e2v={
-            'angry': 'angry',       # 0
-            'happy': 'happy',       # 3
-            'neutral': 'neutral',   # 4
-            'sad': 'sad',           # 6
-            'surprise': 'surprised' # 7 (note spelling difference)
-        },
-        enabled=True,
-    ),
-
     'esd_en': DatasetConfig(
         name='ESD-English',
         data_root=f'{_DATA_ROOT}/ESD/Emotion Speech Dataset',
@@ -74,20 +60,6 @@ DATASET_CONFIGS: Dict[str, DatasetConfig] = {
             'neutral': 'neutral',   # 4
             'sad': 'sad',           # 6
             'surprise': 'surprised' # 7
-        },
-        enabled=True,
-    ),
-    
-    'esd_zh': DatasetConfig(
-        name='ESD-Chinese',
-        data_root=f'{_DATA_ROOT}/ESD/Emotion Speech Dataset',
-        emotions=['angry', 'happy', 'neutral', 'sad', 'surprise'],
-        emotion_to_e2v={
-            'angry': 'angry',
-            'happy': 'happy',
-            'neutral': 'neutral',
-            'sad': 'sad',
-            'surprise': 'surprised'
         },
         enabled=True,
     ),
@@ -161,22 +133,6 @@ DATASET_CONFIGS: Dict[str, DatasetConfig] = {
         enabled=True,
     ),
     
-    'emodb': DatasetConfig(
-        name='EmoDB',
-        data_root=f'{_DATA_ROOT}/EmoDB',
-        emotions=['anger', 'happiness', 'neutral', 'sadness', 'fear', 'disgust'],
-        emotion_to_e2v={
-            'anger': 'angry',       # 0
-            'happiness': 'happy',   # 3
-            'neutral': 'neutral',   # 4
-            'sadness': 'sad',       # 6
-            'fear': 'fearful',      # 2
-            'disgust': 'disgusted', # 1
-            # Note: boredom is skipped (not in emotion2vec 9 classes)
-        },
-        enabled=True,
-    ),
-    
     'msp': DatasetConfig(
         name='MSP-Podcast',
         data_root=f'{_DATA_ROOT}/MSP',
@@ -192,47 +148,10 @@ DATASET_CONFIGS: Dict[str, DatasetConfig] = {
     ),
 
     # ============================================================
-    # CAMEO multilingual datasets (amu-cai/CAMEO)
-    # Used for OOD testing only, not for training
+    # CAMEO OOD test datasets (amu-cai/CAMEO on HuggingFace)
     # Directory structure: CAMEO/{split_name}/{emotion}/*.wav
     # ============================================================
 
-    # CREMA-D (English) -- CAMEO version (differs from original cremad data, avoids conflict)
-    'cameo_crema_d': DatasetConfig(
-        name='CAMEO-CREMA-D',
-        data_root=f'{_DATA_ROOT}/CAMEO/crema_d',
-        emotions=['anger', 'disgust', 'fear', 'happiness', 'neutral', 'sadness'],
-        emotion_to_e2v={
-            'anger': 'angry',
-            'disgust': 'disgusted',
-            'fear': 'fearful',
-            'happiness': 'happy',
-            'neutral': 'neutral',
-            'sadness': 'sad',
-        },
-        enabled=True,
-        min_samples_per_emotion=50,
-    ),
-
-    # CaFE (French)
-    'cameo_cafe': DatasetConfig(
-        name='CAMEO-CaFE',
-        data_root=f'{_DATA_ROOT}/CAMEO/cafe',
-        emotions=['anger', 'disgust', 'fear', 'happiness', 'neutral', 'sadness', 'surprise'],
-        emotion_to_e2v={
-            'anger': 'angry',
-            'disgust': 'disgusted',
-            'fear': 'fearful',
-            'happiness': 'happy',
-            'neutral': 'neutral',
-            'sadness': 'sad',
-            'surprise': 'surprised',
-        },
-        enabled=True,
-        min_samples_per_emotion=50,
-    ),
-
-    # EMNS (English) -- sarcasm cannot be mapped, skipped
     'cameo_emns': DatasetConfig(
         name='CAMEO-EMNS',
         data_root=f'{_DATA_ROOT}/CAMEO/emns',
@@ -251,25 +170,6 @@ DATASET_CONFIGS: Dict[str, DatasetConfig] = {
         min_samples_per_emotion=50,
     ),
 
-    # Emozionalmente (Italian)
-    'cameo_emozionalmente': DatasetConfig(
-        name='CAMEO-Emozionalmente',
-        data_root=f'{_DATA_ROOT}/CAMEO/emozionalmente',
-        emotions=['anger', 'disgust', 'fear', 'happiness', 'neutral', 'sadness', 'surprise'],
-        emotion_to_e2v={
-            'anger': 'angry',
-            'disgust': 'disgusted',
-            'fear': 'fearful',
-            'happiness': 'happy',
-            'neutral': 'neutral',
-            'sadness': 'sad',
-            'surprise': 'surprised',
-        },
-        enabled=True,
-        min_samples_per_emotion=50,
-    ),
-
-    # EnterFace (English)
     'cameo_enterface': DatasetConfig(
         name='CAMEO-EnterFace',
         data_root=f'{_DATA_ROOT}/CAMEO/enterface',
@@ -302,200 +202,6 @@ DATASET_CONFIGS: Dict[str, DatasetConfig] = {
         min_samples_per_emotion=50,
     ),
 
-    # MESD (Spanish)
-    'cameo_mesd': DatasetConfig(
-        name='CAMEO-MESD',
-        data_root=f'{_DATA_ROOT}/CAMEO/mesd',
-        emotions=['anger', 'disgust', 'fear', 'happiness', 'neutral', 'sadness'],
-        emotion_to_e2v={
-            'anger': 'angry',
-            'disgust': 'disgusted',
-            'fear': 'fearful',
-            'happiness': 'happy',
-            'neutral': 'neutral',
-            'sadness': 'sad',
-        },
-        enabled=True,
-        min_samples_per_emotion=50,
-    ),
-
-    # NEMO (Polish)
-    'cameo_nemo': DatasetConfig(
-        name='CAMEO-NEMO',
-        data_root=f'{_DATA_ROOT}/CAMEO/nemo',
-        emotions=['anger', 'fear', 'happiness', 'neutral', 'sadness', 'surprise'],
-        emotion_to_e2v={
-            'anger': 'angry',
-            'fear': 'fearful',
-            'happiness': 'happy',
-            'neutral': 'neutral',
-            'sadness': 'sad',
-            'surprise': 'surprised',
-        },
-        enabled=True,
-        min_samples_per_emotion=50,
-    ),
-
-    # OREAU (French)
-    'cameo_oreau': DatasetConfig(
-        name='CAMEO-OREAU',
-        data_root=f'{_DATA_ROOT}/CAMEO/oreau',
-        emotions=['anger', 'disgust', 'fear', 'happiness', 'neutral', 'sadness', 'surprise'],
-        emotion_to_e2v={
-            'anger': 'angry',
-            'disgust': 'disgusted',
-            'fear': 'fearful',
-            'happiness': 'happy',
-            'neutral': 'neutral',
-            'sadness': 'sad',
-            'surprise': 'surprised',
-        },
-        enabled=True,
-        min_samples_per_emotion=50,
-    ),
-
-    # Pavoque (German) -- poker cannot be mapped, skipped
-    'cameo_pavoque': DatasetConfig(
-        name='CAMEO-Pavoque',
-        data_root=f'{_DATA_ROOT}/CAMEO/pavoque',
-        emotions=['anger', 'happiness', 'neutral', 'sadness'],
-        emotion_to_e2v={
-            'anger': 'angry',
-            'happiness': 'happy',
-            'neutral': 'neutral',
-            'sadness': 'sad',
-            # poker -> cannot be mapped
-        },
-        enabled=True,
-        min_samples_per_emotion=50,
-    ),
-
-    # RAVDESS (English) -- CAMEO version, calm skipped
-    'cameo_ravdess': DatasetConfig(
-        name='CAMEO-RAVDESS',
-        data_root=f'{_DATA_ROOT}/CAMEO/ravdess',
-        emotions=['anger', 'disgust', 'fear', 'happiness', 'neutral', 'sadness', 'surprise'],
-        emotion_to_e2v={
-            'anger': 'angry',
-            'disgust': 'disgusted',
-            'fear': 'fearful',
-            'happiness': 'happy',
-            'neutral': 'neutral',
-            'sadness': 'sad',
-            'surprise': 'surprised',
-            # calm -> cannot be mapped
-        },
-        enabled=True,
-        min_samples_per_emotion=50,
-    ),
-
-    # RESD (Russian) -- enthusiasm cannot be mapped, skipped
-    'cameo_resd': DatasetConfig(
-        name='CAMEO-RESD',
-        data_root=f'{_DATA_ROOT}/CAMEO/resd',
-        emotions=['anger', 'disgust', 'fear', 'happiness', 'neutral', 'sadness'],
-        emotion_to_e2v={
-            'anger': 'angry',
-            'disgust': 'disgusted',
-            'fear': 'fearful',
-            'happiness': 'happy',
-            'neutral': 'neutral',
-            'sadness': 'sad',
-            # enthusiasm -> cannot be mapped
-        },
-        enabled=True,
-        min_samples_per_emotion=50,
-    ),
-
-    # SUBESCO (Bengali)
-    'cameo_subesco': DatasetConfig(
-        name='CAMEO-SUBESCO',
-        data_root=f'{_DATA_ROOT}/CAMEO/subesco',
-        emotions=['anger', 'disgust', 'fear', 'happiness', 'neutral', 'sadness', 'surprise'],
-        emotion_to_e2v={
-            'anger': 'angry',
-            'disgust': 'disgusted',
-            'fear': 'fearful',
-            'happiness': 'happy',
-            'neutral': 'neutral',
-            'sadness': 'sad',
-            'surprise': 'surprised',
-        },
-        enabled=True,
-        min_samples_per_emotion=50,
-    ),
-
-    # ================================================================
-    # Additional OOD Test Datasets (English, 4-fair emotions)
-    # ================================================================
-
-    # SAVEE (English) -- 4 speakers, filename: {speaker}_{emotion_code}{number}.wav
-    # Resampled from 44100Hz to 16kHz
-    'savee': DatasetConfig(
-        name='SAVEE',
-        data_root=f'{_DATA_ROOT}/SAVEE_16k',
-        emotions=['angry', 'happy', 'neutral', 'sad'],
-        emotion_to_e2v={
-            'angry': 'angry',
-            'happy': 'happy',
-            'neutral': 'neutral',
-            'sad': 'sad',
-        },
-        enabled=True,
-        min_samples_per_emotion=50,
-    ),
-
-    # TESS (English) -- 2 speakers (OAF, YAF), folders: {speaker}_{emotion}
-    # Resampled from 24414Hz to 16kHz
-    'tess': DatasetConfig(
-        name='TESS',
-        data_root=f'{_DATA_ROOT}/TESS_16k',
-        emotions=['angry', 'happy', 'neutral', 'sad'],
-        emotion_to_e2v={
-            'angry': 'angry',
-            'happy': 'happy',
-            'neutral': 'neutral',
-            'sad': 'sad',
-        },
-        enabled=True,
-        min_samples_per_emotion=50,
-    ),
-
-    # MELD (English) -- Friends TV series utterances, organized by emotion after extraction
-    'meld': DatasetConfig(
-        name='MELD',
-        data_root=f'{_DATA_ROOT}/MELD/audio',
-        emotions=['anger', 'joy', 'neutral', 'sadness'],
-        emotion_to_e2v={
-            'anger': 'angry',
-            'joy': 'happy',
-            'neutral': 'neutral',
-            'sadness': 'sad',
-        },
-        enabled=True,
-        min_samples_per_emotion=50,
-    ),
-
-    # ASVP-ESD (multilingual, speech + non-speech emotional sounds)
-    # Filename encoding: field 3 = emotion code
-    # Emotion codes: 02=neutral, 03=happy, 04=sad, 05=angry, 06=fearful, 07=disgust, 08=surprised
-    # Skipped: 01=boredom, 09=excited, 10=pleasure, 11=pain, 12=disappointment, 13=breath
-    'asvp_esd': DatasetConfig(
-        name='ASVP-ESD',
-        data_root=f'{_DATA_ROOT}/ASVP-ESD/ASVP-ESD-Update/Audio',
-        emotions=['neutral', 'happy', 'sad', 'angry', 'fearful', 'disgust', 'surprised'],
-        emotion_to_e2v={
-            'neutral': 'neutral',
-            'happy': 'happy',
-            'sad': 'sad',
-            'angry': 'angry',
-            'fearful': 'fearful',
-            'disgust': 'disgusted',
-            'surprised': 'surprised',
-        },
-        enabled=True,
-        min_samples_per_emotion=50,
-    ),
 }
 
 
@@ -517,17 +223,14 @@ def get_dataset_config(name: str) -> DatasetConfig:
 
 DATASET_FILE_PATTERNS = {
     'esd': {
-        # ESD directory structure: {data_root}/{speaker_id}/{emotion}/*.wav
         'pattern': '**/*.wav',
-        'emotion_from_path': lambda p: p.parent.name.lower(),  # get emotion from parent directory
+        'emotion_from_path': lambda p: p.parent.name.lower(),
     },
     'iemocap': {
-        # IEMOCAP requires reading from annotation files
         'pattern': '**/*.wav',
         'annotation_dir': 'EmoEvaluation',
     },
     'ravdess': {
-        # RAVDESS filename format: XX-XX-XX-XX-XX-XX-XX.wav, 3rd field is emotion
         'pattern': '**/*.wav',
         'emotion_code_map': {
             '01': 'neutral', '02': 'calm', '03': 'happy', '04': 'sad',
@@ -535,49 +238,23 @@ DATASET_FILE_PATTERNS = {
         },
     },
     'cremad': {
-        # CREMA-D filename format: XXXX_XXX_EMO_XX.wav
         'pattern': '**/*.wav',
         'emotion_code_map': {
             'ANG': 'angry', 'DIS': 'disgust', 'FEA': 'fear',
             'HAP': 'happy', 'NEU': 'neutral', 'SAD': 'sad'
         },
     },
-    'emodb': {
-        # EmoDB filename: last letter is the emotion code
-        'pattern': '**/*.wav',
-        'emotion_code_map': {
-            'W': 'anger', 'L': 'boredom', 'E': 'disgust',
-            'A': 'fear', 'F': 'happiness', 'N': 'neutral', 'T': 'sadness'
-        },
-    },
     'msp': {
-        # MSP reads from JSON file
         'json_path': f'{_DATA_ROOT}/MSP/msp_ambigous.json',
     },
 }
 
-# CAMEO unified file pattern: {data_root}/{emotion}/*.wav
-CAMEO_DATASETS = [
-    'cameo_crema_d', 'cameo_cafe', 'cameo_emns', 'cameo_emozionalmente',
-    'cameo_enterface', 'cameo_jl_corpus', 'cameo_mesd', 'cameo_nemo',
-    'cameo_oreau', 'cameo_pavoque', 'cameo_ravdess', 'cameo_resd', 'cameo_subesco',
-]
+CAMEO_DATASETS = ['cameo_emns', 'cameo_enterface', 'cameo_jl_corpus']
 
-# CAMEO language information
 CAMEO_LANGUAGES = {
-    'cameo_crema_d': 'English',
-    'cameo_cafe': 'French',
     'cameo_emns': 'English',
-    'cameo_emozionalmente': 'Italian',
     'cameo_enterface': 'English',
     'cameo_jl_corpus': 'English',
-    'cameo_mesd': 'Spanish',
-    'cameo_nemo': 'Polish',
-    'cameo_oreau': 'French',
-    'cameo_pavoque': 'German',
-    'cameo_ravdess': 'English',
-    'cameo_resd': 'Russian',
-    'cameo_subesco': 'Bengali',
 }
 
 
