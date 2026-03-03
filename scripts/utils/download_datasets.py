@@ -41,6 +41,11 @@ sys.path.insert(0, str(EXP_ROOT))
 DATA_DIR = EXP_ROOT / 'data'
 STAGING_DIR = EXP_ROOT / 'download'
 
+# Redirect all library caches to STAGING_DIR so we don't fill ~/.cache/
+os.environ.setdefault('KAGGLE_CACHE_FOLDER', str(STAGING_DIR / 'kaggle_cache'))
+os.environ.setdefault('HF_HOME', str(STAGING_DIR / 'hf_cache'))
+os.environ.setdefault('MODELSCOPE_CACHE', str(STAGING_DIR / 'modelscope_cache'))
+
 DATASET_TARGETS = {
     'ravdess':         DATA_DIR / 'RAVDESS',
     'cremad':          DATA_DIR / 'CREMA-D',
