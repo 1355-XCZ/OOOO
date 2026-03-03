@@ -179,7 +179,26 @@ def evaluate_ce_on_samples(model, cached_samples, head, num_layers, device,
     return dict(layer_ces)
 
 
-def run(args):
+def run(args=None, dry_run=False):
+    if dry_run:
+        print("  [DRY RUN] Would run RQ2/RQ3 CE evaluation for all SSL × source combinations")
+        return
+
+    if args is None:
+        import argparse
+        parser = argparse.ArgumentParser()
+        parser.add_argument('--ssl-model', type=str, required=True,
+                            choices=list(SSL_CONFIGS.keys()))
+        parser.add_argument('--codebook-source', type=str, required=True,
+                            choices=CODEBOOK_SOURCES)
+        parser.add_argument('--version', type=str, default='va',
+                            choices=['va', 'vb'])
+        parser.add_argument('--device', type=str, default='cuda')
+        parser.add_argument('--use-custom-head', action='store_true')
+        parser.add_argument('--save-samples', action='store_true')
+        parser.add_argument('--include-ratio', action='store_true')
+        args = parser.parse_args()
+
     set_seed()
     device = args.device
     if device == 'cuda' and not torch.cuda.is_available():

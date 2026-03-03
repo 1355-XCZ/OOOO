@@ -364,6 +364,14 @@ def plot_figure(version: str):
     print('Done.')
 
 
+def run(dry_run=False):
+    if dry_run:
+        out = PAPER_FIGURES_DIR / 'rq3_combined_js_top2.png'
+        print(f"  [DRY RUN] Would generate {out}")
+        return
+    plot_figure('va')
+
+
 def main():
     parser = argparse.ArgumentParser(description='RQ3 Ratio × Ambiguity Figure')
     parser.add_argument('--version', type=str, default='va', choices=['va', 'vb'])
