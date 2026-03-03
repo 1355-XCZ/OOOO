@@ -334,14 +334,27 @@ def setup_iemocap(copy_from: str = None):
     return False
 
 
-def _zip_extract_filtered(archive: Path, dest: Path, skip_prefixes=('__MACOSX',)):
-    """Extract zip skipping macOS junk and other unwanted prefixes."""
+def _zip_extract_filtered(archive: Path, dest: Path,
+                          skip_prefixes=('__MACOSX',),
+                          keep_extensions=None):
+    """Extract zip with filtering.
+
+    Args:
+        skip_prefixes: skip entries whose path starts with these
+        keep_extensions: if set, only extract files with these extensions (e.g. {'.wav', '.json'})
+    """
     dest.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(archive, 'r') as zf:
         for member in zf.infolist():
             if any(member.filename.startswith(p) or f'/{p}/' in member.filename
                    for p in skip_prefixes):
                 continue
+            if member.is_dir():
+                continue
+            if keep_extensions:
+                ext = os.path.splitext(member.filename)[1].lower()
+                if ext not in keep_extensions:
+                    continue
             zf.extract(member, dest)
 
 
@@ -357,8 +370,9 @@ def setup_msp(copy_from: str = None):
         for archive_name in MSP_ARCHIVES:
             archive = src / archive_name
             if archive.exists():
-                print(f'  Extracting {archive} -> {target}/ (skipping __MACOSX) ...')
-                _zip_extract_filtered(archive, target)
+                print(f'  Extracting {archive} -> {target}/ (wav+json only) ...')
+                _zip_extract_filtered(archive, target,
+                                      keep_extensions={'.wav', '.json'})
                 if target.exists():
                     json_files = list(target.rglob('*.json'))
                     wav_files = list(target.rglob('*.wav'))
