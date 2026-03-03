@@ -32,3 +32,5 @@ gdown>=5.0
 kagglehub>=0.3
 datasets>=2.18
 modelscope>=1.10
+hf_transfer>=0.1
+pyarrow>=14.0

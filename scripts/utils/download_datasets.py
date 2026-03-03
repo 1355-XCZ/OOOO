@@ -156,6 +156,109 @@ def download_esd():
         return False
 
 
+CAMEO_RAW_DIR = STAGING_DIR / 'cameo_raw'
+CAMEO_SPLITS = ['emns', 'enterface', 'jl_corpus']
+
+
+def _ensure_cameo_raw():
+    """Download raw CAMEO dataset once via huggingface-cli (fast with hf_transfer)."""
+    marker = CAMEO_RAW_DIR / '.download_complete'
+    if marker.exists():
+        return True
+
+    print('  Downloading CAMEO raw data via huggingface-cli ...')
+    CAMEO_RAW_DIR.mkdir(parents=True, exist_ok=True)
+
+    env = os.environ.copy()
+    env['HF_HUB_ENABLE_HF_TRANSFER'] = '1'
+
+    try:
+        subprocess.run(
+            ['huggingface-cli', 'download', 'amu-cai/CAMEO',
+             '--repo-type', 'dataset',
+             '--local-dir', str(CAMEO_RAW_DIR)],
+            env=env, check=True,
+        )
+        marker.touch()
+        return True
+    except FileNotFoundError:
+        print('  [WARN] huggingface-cli not found, falling back to datasets lib')
+        return False
+    except subprocess.CalledProcessError as e:
+        print(f'  [FAIL] huggingface-cli download failed (exit {e.returncode})')
+        return False
+
+
+def _extract_cameo_from_parquet(split_name: str):
+    """Extract wav files from downloaded CAMEO parquet files."""
+    import pyarrow.parquet as pq
+
+    key = f'cameo_{split_name}'
+    target = DATASET_TARGETS[key]
+
+    parquet_dir = CAMEO_RAW_DIR / split_name
+    pq_files = sorted(parquet_dir.glob('*.parquet')) if parquet_dir.exists() else []
+    if not pq_files:
+        pq_files = sorted(CAMEO_RAW_DIR.glob(f'{split_name}*.parquet'))
+    if not pq_files:
+        pq_files = sorted(CAMEO_RAW_DIR.glob(f'**/{split_name}*.parquet'))
+
+    if not pq_files:
+        return False
+
+    target.mkdir(parents=True, exist_ok=True)
+    count = 0
+    for pq_file in pq_files:
+        table = pq.read_table(pq_file)
+        for i in range(len(table)):
+            emotion = table.column('emotion')[i].as_py()
+            audio_col = table.column('audio')[i].as_py()
+
+            emo_dir = target / emotion
+            emo_dir.mkdir(parents=True, exist_ok=True)
+            wav_path = emo_dir / f'{split_name}_{count:05d}.wav'
+
+            if isinstance(audio_col, dict) and 'bytes' in audio_col and audio_col['bytes']:
+                wav_path.write_bytes(audio_col['bytes'])
+                count += 1
+            elif isinstance(audio_col, dict) and 'path' in audio_col:
+                src = parquet_dir / audio_col['path'] if (parquet_dir / audio_col['path']).exists() else Path(audio_col['path'])
+                if src.exists():
+                    shutil.copy2(src, wav_path)
+                    count += 1
+
+    return count > 0
+
+
+def _extract_cameo_fallback(split_name: str):
+    """Fallback: use datasets library with decode=False."""
+    key = f'cameo_{split_name}'
+    target = DATASET_TARGETS[key]
+
+    from datasets import load_dataset, Audio
+    ds = load_dataset('amu-cai/CAMEO', split=split_name)
+    ds = ds.cast_column('audio', Audio(decode=False))
+
+    target.mkdir(parents=True, exist_ok=True)
+    count = 0
+    for i, sample in enumerate(ds):
+        emotion = sample['emotion']
+        audio = sample['audio']
+
+        emo_dir = target / emotion
+        emo_dir.mkdir(parents=True, exist_ok=True)
+        wav_path = emo_dir / f'{split_name}_{i:05d}.wav'
+
+        if isinstance(audio, dict) and 'bytes' in audio and audio['bytes']:
+            wav_path.write_bytes(audio['bytes'])
+            count += 1
+        elif isinstance(audio, dict) and 'path' in audio and audio['path']:
+            shutil.copy2(audio['path'], wav_path)
+            count += 1
+
+    return count > 0
+
+
 def download_cameo_subset(split_name: str):
     key = f'cameo_{split_name}'
     target = DATASET_TARGETS[key]
@@ -163,45 +266,23 @@ def download_cameo_subset(split_name: str):
         print(f'  [SKIP] CAMEO-{split_name} already exists ({target})')
         return True
 
-    print(f'  Downloading CAMEO split={split_name} from HuggingFace ...')
+    print(f'  Processing CAMEO split={split_name} ...')
     try:
-        from datasets import load_dataset
-        import soundfile as sf
-        import io
+        # Strategy 1: extract from pre-downloaded parquet (via huggingface-cli)
+        if CAMEO_RAW_DIR.exists() and _extract_cameo_from_parquet(split_name):
+            wav_count = len(list(target.rglob('*.wav')))
+            print(f'  [OK] CAMEO-{split_name}: {wav_count} wav files -> {target}')
+            return True
 
-        ds = load_dataset('amu-cai/CAMEO', split=split_name)
+        # Strategy 2: datasets library with decode=False
+        print(f'  Trying datasets library fallback for {split_name} ...')
+        if _extract_cameo_fallback(split_name):
+            wav_count = len(list(target.rglob('*.wav')))
+            print(f'  [OK] CAMEO-{split_name}: {wav_count} wav files -> {target}')
+            return True
 
-        # Disable automatic audio decoding (avoids torchcodec dependency)
-        if hasattr(ds, 'cast_column'):
-            from datasets import Audio
-            ds = ds.cast_column('audio', Audio(decode=False))
-
-        target.mkdir(parents=True, exist_ok=True)
-
-        count = 0
-        for i, sample in enumerate(ds):
-            emotion = sample['emotion']
-            audio = sample['audio']
-
-            emo_dir = target / emotion
-            emo_dir.mkdir(parents=True, exist_ok=True)
-            wav_path = emo_dir / f'{split_name}_{i:05d}.wav'
-
-            if isinstance(audio, dict) and 'bytes' in audio and audio['bytes']:
-                wav_path.write_bytes(audio['bytes'])
-            elif isinstance(audio, dict) and 'path' in audio and audio['path']:
-                shutil.copy2(audio['path'], wav_path)
-            elif isinstance(audio, dict) and 'array' in audio:
-                import numpy as np
-                array = np.array(audio['array'], dtype=np.float32)
-                sf.write(str(wav_path), array, audio['sampling_rate'])
-            else:
-                print(f'  [WARN] Could not extract audio for sample {i}')
-                continue
-            count += 1
-
-        print(f'  [OK] CAMEO-{split_name}: {count} wav files -> {target}')
-        return True
+        print(f'  [FAIL] CAMEO-{split_name}: no audio extracted')
+        return False
     except Exception as e:
         print(f'  [FAIL] CAMEO-{split_name} download failed: {e}')
         return False
@@ -445,6 +526,15 @@ Examples:
     }
 
     targets = list(auto_downloads.keys()) if args.all else args.dataset
+
+    # Pre-download CAMEO raw data if any CAMEO subset is requested
+    cameo_needed = [t for t in targets if t.startswith('cameo_')]
+    if cameo_needed:
+        all_cameo_exist = all(_check_exists(DATASET_TARGETS[c]) for c in cameo_needed)
+        if not all_cameo_exist:
+            print('\n--- cameo (bulk download) ---')
+            _ensure_cameo_raw()
+
     for name in targets:
         print(f'\n--- {name} ---')
         results[name] = auto_downloads[name]()
