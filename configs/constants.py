@@ -32,12 +32,12 @@ DEFAULT_MAX_SAMPLES: int = 200
 # ============================================================
 DATA_ROOT: str = os.environ.get(
     'DATA_ROOT',
-    str(_EXP_ROOT / 'download'),
+    str(_EXP_ROOT / 'data'),
 )
 
 E2V_MODEL_PATH: str = os.environ.get(
     'E2V_MODEL_PATH',
-    str(_EXP_ROOT / 'download' / 'models' / 'emotion2vec_plus_base' / 'model.pt'),
+    str(_EXP_ROOT / 'data' / 'models' / 'emotion2vec_plus_base' / 'model.pt'),
 )
 
 E2V_MODEL_DIR: str = os.environ.get(

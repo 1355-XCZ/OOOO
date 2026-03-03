@@ -6,8 +6,8 @@
 codebooks/
 classifiers/
 
-# --- Data splits (reproducible with GLOBAL_SEED from constants.py) ---
-data/splits/
+# --- Data directory (datasets + splits + models, managed by download_datasets.py) ---
+data/
 
 # --- Evaluation intermediate results (large, reproducible) ---
 results/

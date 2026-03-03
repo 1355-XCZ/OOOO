@@ -171,10 +171,13 @@ def check_datasets():
     for name, path in dataset_dirs.items():
         if path.exists():
             wav_count = len(list(path.rglob('*.wav')))
+            json_count = len(list(path.rglob('*.json')))
             if wav_count > 0:
                 ok(f"{name:20s} {wav_count:>5d} wav files")
+            elif json_count > 0:
+                ok(f"{name:20s} {json_count:>5d} json files")
             else:
-                warn(f"{name:20s} exists but no wav files found")
+                warn(f"{name:20s} exists but no wav/json files found")
         else:
             warn(f"{name:20s} NOT FOUND at {path}")
 

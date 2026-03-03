@@ -24,8 +24,8 @@ fi
 
 # --- Defaults (override via local_config.sh or environment) ---
 export VENV_PATH="${VENV_PATH:-${EXP_ROOT}/.venv}"
-export DATA_ROOT="${DATA_ROOT:-${EXP_ROOT}/download}"
-export E2V_MODEL_PATH="${E2V_MODEL_PATH:-${EXP_ROOT}/download/models/emotion2vec_plus_base/model.pt}"
+export DATA_ROOT="${DATA_ROOT:-${EXP_ROOT}/data}"
+export E2V_MODEL_PATH="${E2V_MODEL_PATH:-${EXP_ROOT}/data/models/emotion2vec_plus_base/model.pt}"
 export LOG_DIR="${LOG_DIR:-${EXP_ROOT}/paper_pipeline/slurm/logs}"
 
 # --- HPC modules ---
