@@ -137,11 +137,14 @@ def download_esd():
             url = f'https://drive.google.com/uc?id={ESD_GDRIVE_ID}'
             gdown.download(url, str(zip_path), quiet=False)
 
-        print('  Extracting ESD.zip -> data/ESD/ ...')
+        print('  Extracting ESD.zip -> data/ESD/ (skipping __MACOSX) ...')
         esd_parent = target.parent
         esd_parent.mkdir(parents=True, exist_ok=True)
         with zipfile.ZipFile(zip_path, 'r') as zf:
-            zf.extractall(esd_parent)
+            for member in zf.infolist():
+                if member.filename.startswith('__MACOSX'):
+                    continue
+                zf.extract(member, esd_parent)
 
         zip_path.unlink(missing_ok=True)
 
@@ -331,6 +334,17 @@ def setup_iemocap(copy_from: str = None):
     return False
 
 
+def _zip_extract_filtered(archive: Path, dest: Path, skip_prefixes=('__MACOSX',)):
+    """Extract zip skipping macOS junk and other unwanted prefixes."""
+    dest.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(archive, 'r') as zf:
+        for member in zf.infolist():
+            if any(member.filename.startswith(p) or f'/{p}/' in member.filename
+                   for p in skip_prefixes):
+                continue
+            zf.extract(member, dest)
+
+
 def setup_msp(copy_from: str = None):
     target = DATASET_TARGETS['msp']
     if _check_exists(target, min_files=1):
@@ -343,13 +357,12 @@ def setup_msp(copy_from: str = None):
         for archive_name in MSP_ARCHIVES:
             archive = src / archive_name
             if archive.exists():
-                print(f'  Extracting {archive} -> {target}/ ...')
-                target.mkdir(parents=True, exist_ok=True)
-                with zipfile.ZipFile(archive, 'r') as zf:
-                    zf.extractall(target)
+                print(f'  Extracting {archive} -> {target}/ (skipping __MACOSX) ...')
+                _zip_extract_filtered(archive, target)
                 if target.exists():
                     json_files = list(target.rglob('*.json'))
-                    print(f'  [OK] MSP-Podcast: {len(json_files)} json file(s) -> {target}')
+                    wav_files = list(target.rglob('*.wav'))
+                    print(f'  [OK] MSP-Podcast: {len(json_files)} json, {len(wav_files)} wav -> {target}')
                     return True
 
         src_dir = src / 'MSP'
