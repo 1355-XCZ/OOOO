@@ -2,28 +2,25 @@
 """
 Prepare IEMOCAP Secondary-Emotion Test Set
 
-Parses IEMOCAP evaluator annotations to find utterances where annotators
-disagree, creating samples with primary + secondary emotion labels and
-full vote distributions.
+Parses IEMOCAP multi-annotator voting data to extract samples with both
+primary and secondary emotions from the fair-4 set {angry, happy, neutral, sad}.
 
-Two versions:
-  va: ties double-counted (both orderings included), cap=100 per pair
-  vb: ties excluded, no cap
+Note: 'excited' (exc) and 'happiness' (hap) are treated as the same emotion ('happy').
+
+Produces two versions:
+  Version A (main):   Tied samples are counted in BOTH directions.
+  Version B (strict): Tied samples are excluded entirely.
 
 Output:
-  data/splits/iemocap/secondary_emotion_va.json
-  data/splits/iemocap/secondary_emotion_vb.json
+  data/splits/iemocap/secondary_emotion_v{a,b}.json
 
-Usage:
-  python scripts/utils/prepare_secondary_emotion_testset.py
-  python scripts/utils/prepare_secondary_emotion_testset.py --version va
+Each entry: {utt_id, audio, primary, secondary, is_tie, votes}
 """
 
-import json
 import re
-import random
-import argparse
+import json
 import sys
+import random
 from pathlib import Path
 from collections import Counter, defaultdict
 
@@ -33,8 +30,9 @@ sys.path.insert(0, str(EXP_ROOT))
 from configs.constants import GLOBAL_SEED, DATA_ROOT
 from core.config import SPLITS_DIR
 
-SEED = GLOBAL_SEED
-TARGET_EMOTIONS = ['angry', 'happy', 'neutral', 'sad']
+IEMOCAP_ROOT = Path(DATA_ROOT) / 'IEMOCAP_full_release'
+FAIR4 = ['angry', 'happy', 'neutral', 'sad']
+MAX_PER_PAIR = 100
 
 EMO_MAP = {
     'Anger': 'angry', 'ang': 'angry',
@@ -45,33 +43,29 @@ EMO_MAP = {
 }
 
 
-def parse_iemocap_annotations(iemocap_root: Path):
-    """Parse all EmoEvaluation files, return per-utterance vote lists."""
-    annotation_files = sorted(iemocap_root.glob('**/EmoEvaluation/*.txt'))
-    utt_votes = {}
+def parse_iemocap_votes(iemocap_root: Path):
+    """Parse individual evaluator votes from IEMOCAP annotation files."""
+    annotation_files = list(iemocap_root.glob('**/EmoEvaluation/*.txt'))
+    utterance_annotations = {}
+    utterance_consensus = {}
 
     for ann_file in annotation_files:
         try:
             with open(ann_file, encoding='latin-1') as f:
                 current_utt = None
                 for line in f:
-                    header = re.match(
+                    match = re.match(
                         r'\[[\d\.]+ - [\d\.]+\]\s+(\S+)\s+(\w+)\s+\[', line)
-                    if header:
-                        current_utt = header.group(1)
-                        if current_utt not in utt_votes:
-                            utt_votes[current_utt] = []
+                    if match:
+                        current_utt = match.group(1)
+                        utterance_consensus[current_utt] = match.group(2)
+                        if current_utt not in utterance_annotations:
+                            utterance_annotations[current_utt] = []
                         continue
-                    indiv = re.match(r'C-[EF]\d:\s+(.+?);', line)
-                    if indiv and current_utt:
-                        raw_labels = [
-                            s.strip() for s in indiv.group(1).split(';')
-                            if s.strip()
-                        ]
-                        for raw in raw_labels:
-                            mapped = EMO_MAP.get(raw)
-                            if mapped and mapped in TARGET_EMOTIONS:
-                                utt_votes[current_utt].append(mapped)
+                    indiv_match = re.match(r'C-[EF]\d:\s+(\w+)', line)
+                    if indiv_match and current_utt:
+                        utterance_annotations[current_utt].append(
+                            indiv_match.group(1))
         except Exception:
             pass
 
@@ -80,129 +74,124 @@ def parse_iemocap_annotations(iemocap_root: Path):
         for f in iemocap_root.glob('**/sentences/wav/**/*.wav')
     }
 
-    return utt_votes, audio_files
+    return utterance_annotations, utterance_consensus, audio_files
 
 
-def build_samples(utt_votes, audio_files):
-    """Build candidate samples with vote distributions."""
-    candidates = []
-    for utt_id, votes in utt_votes.items():
+def build_testsets(utterance_annotations, utterance_consensus, audio_files,
+                   seed=GLOBAL_SEED):
+    """Build Version A and Version B test sets."""
+    rng = random.Random(seed)
+    fair4_set = set(FAIR4)
+
+    raw_parsed = []
+    for utt_id, raw_votes in utterance_annotations.items():
         if utt_id not in audio_files:
             continue
-        mapped = [v for v in votes if v in TARGET_EMOTIONS]
+        mapped = [EMO_MAP.get(v) for v in raw_votes]
+        mapped = [m for m in mapped if m is not None]
         if len(mapped) < 2:
             continue
         vote_counts = Counter(mapped)
-        unique_emotions = [e for e in vote_counts if e in TARGET_EMOTIONS]
-        if len(unique_emotions) < 2:
+        ranked = vote_counts.most_common()
+        if len(ranked) < 2:
             continue
-
-        most_common = vote_counts.most_common()
-        primary_emo = most_common[0][0]
-        primary_count = most_common[0][1]
-        secondary_emo = most_common[1][0]
-        secondary_count = most_common[1][1]
-        is_tie = (primary_count == secondary_count)
-
-        candidates.append({
+        if ranked[0][0] not in fair4_set or ranked[1][0] not in fair4_set:
+            continue
+        is_tie = ranked[0][1] == ranked[1][1]
+        tied_emotions = [e for e, c in ranked if c == ranked[0][1] and e in fair4_set]
+        raw_parsed.append({
             'utt_id': utt_id,
-            'audio': audio_files[utt_id],
+            'emo1': ranked[0][0],
+            'emo2': ranked[1][0],
+            'tied_emotions': tied_emotions,
             'is_tie': is_tie,
+            'audio': audio_files[utt_id],
             'votes': dict(vote_counts),
-            'primary': primary_emo,
-            'secondary': secondary_emo,
         })
 
-    return candidates
-
-
-def build_version_a(candidates, cap=100):
-    """Version A: ties double-counted, cap per (primary, secondary) pair."""
-    random.seed(SEED)
-    pair_buckets = defaultdict(list)
-
-    for s in candidates:
-        pair_buckets[(s['primary'], s['secondary'])].append(s)
+    # Version A: ties counted in all directions
+    pair_a = defaultdict(list)
+    for s in raw_parsed:
+        entry = {
+            'utt_id': s['utt_id'],
+            'audio': s['audio'],
+            'is_tie': s['is_tie'],
+            'votes': s['votes'],
+        }
         if s['is_tie']:
-            flipped = dict(s)
-            flipped['primary'] = s['secondary']
-            flipped['secondary'] = s['primary']
-            pair_buckets[(flipped['primary'], flipped['secondary'])].append(flipped)
+            tied = s['tied_emotions']
+            for i, emo_p in enumerate(tied):
+                for j, emo_s in enumerate(tied):
+                    if i != j:
+                        pair_a[(emo_p, emo_s)].append(
+                            {**entry, 'primary': emo_p, 'secondary': emo_s})
+        else:
+            pair_a[(s['emo1'], s['emo2'])].append(
+                {**entry, 'primary': s['emo1'], 'secondary': s['emo2']})
 
-    samples = []
-    pair_stats = {}
-    for (pri, sec) in sorted(pair_buckets.keys()):
-        bucket = pair_buckets[(pri, sec)]
-        random.shuffle(bucket)
-        selected = bucket[:cap]
-        samples.extend(selected)
-        pair_stats[f'{pri}->{sec}'] = len(selected)
+    # Version B: exclude all ties
+    pair_b = defaultdict(list)
+    for s in raw_parsed:
+        if s['is_tie']:
+            continue
+        pair_b[(s['emo1'], s['emo2'])].append({
+            'utt_id': s['utt_id'],
+            'audio': s['audio'],
+            'primary': s['emo1'],
+            'secondary': s['emo2'],
+            'is_tie': False,
+            'votes': s['votes'],
+        })
 
-    random.shuffle(samples)
-    return samples, pair_stats
+    def _cap_and_flatten(pair_dict, max_per_pair):
+        samples = []
+        pair_stats = {}
+        for primary in FAIR4:
+            for secondary in FAIR4:
+                if primary == secondary:
+                    continue
+                entries = pair_dict.get((primary, secondary), [])
+                if len(entries) > max_per_pair:
+                    entries = rng.sample(entries, max_per_pair)
+                pair_stats[f'{primary}->{secondary}'] = len(entries)
+                samples.extend(entries)
+        return samples, pair_stats
 
+    va_samples, va_stats = _cap_and_flatten(pair_a, MAX_PER_PAIR)
+    vb_samples, vb_stats = _cap_and_flatten(pair_b, max_per_pair=9999)
 
-def build_version_b(candidates):
-    """Version B: ties excluded, no cap."""
-    random.seed(SEED)
-    samples = [s for s in candidates if not s['is_tie']]
-    pair_stats = Counter()
-    for s in samples:
-        pair_stats[f"{s['primary']}->{s['secondary']}"] += 1
-
-    random.shuffle(samples)
-    return samples, dict(sorted(pair_stats.items()))
-
-
-def save_testset(samples, pair_stats, description, version):
-    out_dir = SPLITS_DIR / 'iemocap'
-    out_dir.mkdir(parents=True, exist_ok=True)
-    out_path = out_dir / f'secondary_emotion_{version}.json'
-    with open(out_path, 'w') as f:
-        json.dump({
-            'description': description,
-            'pair_stats': pair_stats,
-            'samples': samples,
-        }, f, indent=1)
-    print(f'  Saved {len(samples)} samples -> {out_path}')
-    print(f'  Pair stats: {pair_stats}')
-    return out_path
+    return va_samples, va_stats, vb_samples, vb_stats
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description='Prepare IEMOCAP secondary-emotion test set')
-    parser.add_argument('--version', type=str, default='all',
-                        choices=['va', 'vb', 'all'])
-    args = parser.parse_args()
+    print(f'Parsing IEMOCAP from {IEMOCAP_ROOT}')
+    annotations, consensus, audio = parse_iemocap_votes(IEMOCAP_ROOT)
+    print(f'  {len(annotations)} utterances, {len(audio)} audio files')
 
-    iemocap_root = Path(DATA_ROOT) / 'IEMOCAP_full_release'
-    if not iemocap_root.exists():
-        print(f'ERROR: IEMOCAP not found at {iemocap_root}')
-        sys.exit(1)
+    va, va_stats, vb, vb_stats = build_testsets(annotations, consensus, audio)
 
-    print(f'Parsing IEMOCAP annotations from {iemocap_root} ...')
-    utt_votes, audio_files = parse_iemocap_annotations(iemocap_root)
-    print(f'  Found {len(utt_votes)} utterances, {len(audio_files)} audio files')
+    out_dir = SPLITS_DIR / 'iemocap'
+    out_dir.mkdir(parents=True, exist_ok=True)
 
-    candidates = build_samples(utt_votes, audio_files)
-    print(f'  Candidates with secondary emotion: {len(candidates)}')
+    va_path = out_dir / 'secondary_emotion_va.json'
+    with open(va_path, 'w') as f:
+        json.dump({'samples': va, 'pair_stats': va_stats,
+                   'description': 'Version A: ties double-counted, cap=100'},
+                  f, indent=1)
+    print(f'\nVersion A saved: {va_path}')
+    print(f'  {len(va)} samples')
+    for k, v in sorted(va_stats.items()):
+        print(f'    {k}: {v}')
 
-    versions = ['va', 'vb'] if args.version == 'all' else [args.version]
-
-    for ver in versions:
-        print(f'\n{"="*60}')
-        print(f'  Building version: {ver}')
-        print(f'{"="*60}')
-        if ver == 'va':
-            samples, pair_stats = build_version_a(candidates, cap=100)
-            desc = 'Version A: ties double-counted, cap=100'
-        else:
-            samples, pair_stats = build_version_b(candidates)
-            desc = 'Version B: ties excluded, no cap'
-        save_testset(samples, pair_stats, desc, ver)
-
-    print('\nDone.')
+    vb_path = out_dir / 'secondary_emotion_vb.json'
+    with open(vb_path, 'w') as f:
+        json.dump({'samples': vb, 'pair_stats': vb_stats,
+                   'description': 'Version B: ties excluded, no cap'},
+                  f, indent=1)
+    print(f'\nVersion B saved: {vb_path}')
+    print(f'  {len(vb)} samples')
+    for k, v in sorted(vb_stats.items()):
+        print(f'    {k}: {v}')
 
 
 if __name__ == '__main__':
