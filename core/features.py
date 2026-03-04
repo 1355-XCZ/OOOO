@@ -94,11 +94,19 @@ SSL_HF_MODELS = {
     'wavlm': 'microsoft/wavlm-large',
 }
 
+SSL_LOCAL_DIRS = {
+    'hubert': 'hubert-large-ll60k',
+    'wavlm': 'wavlm-large',
+}
+
 
 class TransformersExtractorWrapper:
     """
     Wraps HuggingFace transformers models (HuBERT, WavLM) to provide the
     same .generate() API as funasr's emotion2vec.
+
+    Models are cached under data/models/{name}/ after the first download
+    so that parallel SLURM jobs share a single local copy.
 
     Usage:
         extractor = TransformersExtractorWrapper('hubert', device='cuda')
@@ -107,21 +115,34 @@ class TransformersExtractorWrapper:
     """
 
     def __init__(self, ssl_model: str, device: str = 'cuda'):
-        from transformers import AutoModel as HFAutoModel, AutoFeatureExtractor
+        from transformers import AutoModel as HFAutoModel
 
         self.ssl_model = ssl_model
         self.device = device
-        model_name = SSL_HF_MODELS[ssl_model]
 
-        logger.info(f"Loading HuggingFace model: {model_name}")
-        self.model = HFAutoModel.from_pretrained(model_name).to(device)
+        local_dir = self._local_model_dir(ssl_model)
+        if local_dir.exists() and any(local_dir.iterdir()):
+            logger.info(f"Loading model from local cache: {local_dir}")
+            self.model = HFAutoModel.from_pretrained(str(local_dir)).to(device)
+        else:
+            model_name = SSL_HF_MODELS[ssl_model]
+            logger.info(f"Downloading model: {model_name} -> {local_dir}")
+            self.model = HFAutoModel.from_pretrained(model_name).to(device)
+            local_dir.mkdir(parents=True, exist_ok=True)
+            self.model.save_pretrained(str(local_dir))
+            logger.info(f"Model saved to local cache: {local_dir}")
+
         self.model.eval()
-
         self._feature_dim = self.model.config.hidden_size
         self._num_layers = self.model.config.num_hidden_layers
 
-        logger.info(f"Model loaded: {model_name} "
+        logger.info(f"Model loaded: {ssl_model} "
                      f"(dim={self._feature_dim}, layers={self._num_layers})")
+
+    @staticmethod
+    def _local_model_dir(ssl_model: str) -> Path:
+        from .config import DATA_DIR
+        return DATA_DIR / 'models' / SSL_LOCAL_DIRS[ssl_model]
 
     @property
     def feature_dim(self) -> int:
