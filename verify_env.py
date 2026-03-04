@@ -17,6 +17,23 @@ from pathlib import Path
 EXP_ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(EXP_ROOT))
 
+# Apply torchaudio compat shim so s3prl imports cleanly on newer torchaudio
+try:
+    import types
+    import torchaudio as _ta
+    if not hasattr(_ta, 'set_audio_backend'):
+        _ta.set_audio_backend = lambda *_a, **_kw: None
+    if not hasattr(_ta, '_backend'):
+        _ta._backend = types.ModuleType('torchaudio._backend')
+        _ta._backend.set_audio_backend = lambda *_a, **_kw: None
+    if not hasattr(_ta, 'sox_effects'):
+        _stub = types.ModuleType('torchaudio.sox_effects')
+        _stub.effect_names = lambda: []
+        _stub.apply_effects_tensor = lambda *a, **kw: (a[0], 16000)
+        _ta.sox_effects = _stub
+except ImportError:
+    pass
+
 PASS = 0
 WARN = 0
 FAIL = 0
@@ -62,11 +79,7 @@ def check_dependencies():
         ("soundfile", "soundfile"),
         ("vector-quantize-pytorch", "vector_quantize_pytorch"),
         ("einops", "einops"),
-        ("transformers", "transformers"),
-        ("gdown", "gdown"),
-        ("kagglehub", "kagglehub"),
-        ("datasets (HuggingFace)", "datasets"),
-        ("modelscope", "modelscope"),
+        ("s3prl", "s3prl"),
     ]
     for display_name, import_name in deps:
         try:

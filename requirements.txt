@@ -17,8 +17,8 @@ tqdm>=4.60
 funasr>=1.2.7
 soundfile>=0.12
 
-# --- SSL feature extraction (HuBERT, WavLM via HuggingFace) ---
-transformers>=4.36
+# --- SSL feature extraction (HuBERT, WavLM via s3prl) ---
+s3prl>=0.4.17
 
 # --- Vector quantization (lucidrains/vector-quantize-pytorch) ---
 vector-quantize-pytorch>=1.14

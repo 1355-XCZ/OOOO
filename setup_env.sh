@@ -180,7 +180,7 @@ check('funasr')
 check('soundfile')
 check('vector-quantize-pytorch', 'vector_quantize_pytorch')
 check('einops')
-check('transformers')
+check('s3prl')
 
 import torch
 if torch.cuda.is_available():
