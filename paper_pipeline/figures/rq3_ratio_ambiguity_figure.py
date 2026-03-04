@@ -266,9 +266,10 @@ def plot_figure(version: str):
         plt.setp(axes_t2[row, 1].get_yticklabels(), visible=False)
 
     handles, labels = axes_t2[0, 0].get_legend_handles_labels()
-    fig_t2.legend(handles, labels, loc='lower center',
-                  ncol=len(labels), fontsize=8, frameon=True, fancybox=True,
-                  bbox_to_anchor=(0.5, -0.04))
+    if handles:
+        fig_t2.legend(handles, labels, loc='lower center',
+                      ncol=len(labels), fontsize=8, frameon=True, fancybox=True,
+                      bbox_to_anchor=(0.5, -0.04))
     fig_t2.tight_layout(rect=[0, 0.04, 1, 1])
 
     for ext in ['png', 'pdf']:
@@ -350,10 +351,11 @@ def plot_figure(version: str):
 
     # Unified legend: JS handles have (low)/(high) line style info
     handles_js, labels_js = ax_js[0].get_legend_handles_labels()
-    fig.legend(handles_js, labels_js, loc='lower center',
-               ncol=10, fontsize=6.5, frameon=True, fancybox=True,
-               columnspacing=1.0, handletextpad=0.4,
-               bbox_to_anchor=(0.5, -0.08))
+    if handles_js:
+        fig.legend(handles_js, labels_js, loc='lower center',
+                   ncol=10, fontsize=6.5, frameon=True, fancybox=True,
+                   columnspacing=1.0, handletextpad=0.4,
+                   bbox_to_anchor=(0.5, -0.08))
 
     for ext in ['png', 'pdf']:
         out = PAPER_FIGURES_DIR / f'rq3_combined_js_top2.{ext}'

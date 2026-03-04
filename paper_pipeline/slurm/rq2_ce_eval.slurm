@@ -42,6 +42,7 @@ python -m paper_pipeline.evaluators.rq2_ce \
     --ssl-model "${SSL_MODEL}" \
     --codebook-source "${SOURCE}" \
     --version va \
-    --device cuda
+    --device cuda \
+    --save-samples
 
 echo "Done: ${SSL_MODEL} / ${SOURCE} at $(date)"
