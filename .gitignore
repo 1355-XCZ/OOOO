@@ -17,6 +17,9 @@ results/
 # --- Download artifacts ---
 download/
 
+# --- HF / Torch caches ---
+.cache/
+
 # --- SLURM job logs ---
 paper_pipeline/slurm/logs/
 

@@ -41,6 +41,12 @@ else
     echo "WARNING: venv not found at ${VENV_PATH}" >&2
 fi
 
+# --- Redirect HF/torch caches to project dir (avoid home quota) ---
+export HF_HOME="${EXP_ROOT}/.cache/huggingface"
+export TRANSFORMERS_CACHE="${HF_HOME}/hub"
+export TORCH_HOME="${EXP_ROOT}/.cache/torch"
+mkdir -p "${HF_HOME}" "${TORCH_HOME}"
+
 export PYTHONPATH="${EXP_ROOT}:${PYTHONPATH}"
 
 export CB_CONFIG="${CB_CONFIG:-2x32}"
