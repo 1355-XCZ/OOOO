@@ -11,6 +11,7 @@ with torchaudio >= 2.1 where legacy APIs have been removed.
 """
 
 import logging
+import sys
 import types
 from pathlib import Path
 from typing import Optional
@@ -20,22 +21,23 @@ import torch
 import torchaudio
 
 # ---- torchaudio compatibility shim for s3prl ----
-# s3prl (and some of its upstreams) call deprecated / removed torchaudio APIs.
-# Patch them as no-ops before s3prl is imported so it works on any torchaudio.
+# s3prl internally imports deprecated / removed torchaudio sub-modules.
+# We inject lightweight stubs so that s3prl loads cleanly on any version.
+
 if not hasattr(torchaudio, 'set_audio_backend'):
     torchaudio.set_audio_backend = lambda *_a, **_kw: None
 
-if not hasattr(torchaudio, '_backend'):
-    torchaudio._backend = types.ModuleType('torchaudio._backend')
-    torchaudio._backend.set_audio_backend = lambda *_a, **_kw: None
+if 'torchaudio._backend' not in sys.modules:
+    _backend_stub = types.ModuleType('torchaudio._backend')
+    _backend_stub.set_audio_backend = lambda *_a, **_kw: None
+    sys.modules['torchaudio._backend'] = _backend_stub
+    torchaudio._backend = _backend_stub
 
-if not hasattr(getattr(torchaudio, '_backend', None) or object, 'set_audio_backend'):
-    torchaudio._backend.set_audio_backend = lambda *_a, **_kw: None
-
-if not hasattr(torchaudio, 'sox_effects'):
+if 'torchaudio.sox_effects' not in sys.modules:
     _sox_stub = types.ModuleType('torchaudio.sox_effects')
     _sox_stub.effect_names = lambda: []
-    _sox_stub.apply_effects_tensor = lambda *a, **kw: (a[0], a[1] if len(a) > 1 else 16000)
+    _sox_stub.apply_effects_tensor = lambda tensor, sr, effects, channels_first=True: (tensor, sr)
+    sys.modules['torchaudio.sox_effects'] = _sox_stub
     torchaudio.sox_effects = _sox_stub
 # ---- end shim ----
 

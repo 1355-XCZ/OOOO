@@ -23,14 +23,17 @@ try:
     import torchaudio as _ta
     if not hasattr(_ta, 'set_audio_backend'):
         _ta.set_audio_backend = lambda *_a, **_kw: None
-    if not hasattr(_ta, '_backend'):
-        _ta._backend = types.ModuleType('torchaudio._backend')
-        _ta._backend.set_audio_backend = lambda *_a, **_kw: None
-    if not hasattr(_ta, 'sox_effects'):
-        _stub = types.ModuleType('torchaudio.sox_effects')
-        _stub.effect_names = lambda: []
-        _stub.apply_effects_tensor = lambda *a, **kw: (a[0], 16000)
-        _ta.sox_effects = _stub
+    if 'torchaudio._backend' not in sys.modules:
+        _be = types.ModuleType('torchaudio._backend')
+        _be.set_audio_backend = lambda *_a, **_kw: None
+        sys.modules['torchaudio._backend'] = _be
+        _ta._backend = _be
+    if 'torchaudio.sox_effects' not in sys.modules:
+        _sx = types.ModuleType('torchaudio.sox_effects')
+        _sx.effect_names = lambda: []
+        _sx.apply_effects_tensor = lambda t, sr, e, channels_first=True: (t, sr)
+        sys.modules['torchaudio.sox_effects'] = _sx
+        _ta.sox_effects = _sx
 except ImportError:
     pass
 
