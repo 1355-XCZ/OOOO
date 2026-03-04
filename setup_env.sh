@@ -144,7 +144,7 @@ pip install --upgrade pip setuptools wheel --quiet
 echo "[3/5] Installing PyTorch + torchaudio (${TORCH_LABEL}) ..."
 pip install torch torchaudio --index-url "${TORCH_INDEX}"
 
-# --- Step 4: Install remaining dependencies (includes s3prl) ---
+# --- Step 4: Install remaining dependencies ---
 REQUIREMENTS="${SCRIPT_DIR}/requirements.txt"
 echo "[4/5] Installing dependencies from requirements.txt ..."
 pip install -r "${REQUIREMENTS}"
@@ -180,7 +180,7 @@ check('funasr')
 check('soundfile')
 check('vector-quantize-pytorch', 'vector_quantize_pytorch')
 check('einops')
-check('s3prl')
+check('transformers')
 
 import torch
 if torch.cuda.is_available():

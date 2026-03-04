@@ -62,7 +62,7 @@ def check_dependencies():
         ("soundfile", "soundfile"),
         ("vector-quantize-pytorch", "vector_quantize_pytorch"),
         ("einops", "einops"),
-        ("s3prl", "s3prl"),
+        ("transformers", "transformers"),
         ("gdown", "gdown"),
         ("kagglehub", "kagglehub"),
         ("datasets (HuggingFace)", "datasets"),

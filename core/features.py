@@ -1,11 +1,11 @@
 """
 SSL Feature Extraction
 
-Functions copied verbatim from:
-    - evaluate_comprehensive_2x32.py: get_emotion2vec_extractor, extract_features (lines 152-180)
-    - ssl_feature_utils.py: S3PRLExtractorWrapper, get_ssl_extractor, get_codebook_dir (full file)
+Provides unified extractors for emotion2vec, HuBERT, and WavLM.
+All extractors expose a .generate() API returning [{'feats': np.ndarray(T, D)}].
 
-Sources are kept intact; the only change is importing E2V_LOCAL_MODEL from core.config.
+HuBERT/WavLM are loaded via HuggingFace transformers (replacing the legacy
+s3prl dependency which is incompatible with torchaudio >= 2.1).
 """
 
 import logging
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 # ============================================================
-# emotion2vec extractor  (from evaluate_comprehensive_2x32.py L152-157)
+# emotion2vec extractor
 # ============================================================
 
 def get_emotion2vec_extractor():
@@ -33,7 +33,6 @@ def get_emotion2vec_extractor():
 
     logger.info("Loading emotion2vec extractor from local cache...")
 
-    # Suppress funasr/modelscope verbose logging during model load
     prev_level = logging.root.level
     logging.root.setLevel(logging.ERROR)
     os.environ.setdefault('FUNASR_LOG_LEVEL', 'ERROR')
@@ -52,17 +51,13 @@ def get_emotion2vec_extractor():
 
 
 # ============================================================
-# Feature extraction  (from evaluate_comprehensive_2x32.py L160-180)
+# Feature extraction
 # ============================================================
 
 def extract_features(extractor, audio_path: str) -> Optional[torch.Tensor]:
     """Extract SSL features from a single audio file.
 
-    Works with both funasr (emotion2vec) and S3PRLExtractorWrapper (HuBERT, WavLM).
-
-    Args:
-        extractor: SSL extractor object with .generate() method
-        audio_path: Path to .wav file
+    Works with both funasr (emotion2vec) and TransformersExtractorWrapper.
 
     Returns:
         Tensor of shape [T, D] or None if extraction fails
@@ -91,52 +86,42 @@ def extract_features(extractor, audio_path: str) -> Optional[torch.Tensor]:
 
 
 # ============================================================
-# S3PRL wrapper  (copied verbatim from ssl_feature_utils.py L37-114)
+# HuggingFace Transformers wrapper for HuBERT / WavLM
 # ============================================================
 
-# SSL model name -> s3prl upstream name
-SSL_TO_S3PRL = {
-    'hubert': 'hubert_large_ll60k',
-    'wavlm': 'wavlm_large',
+SSL_HF_MODELS = {
+    'hubert': 'facebook/hubert-large-ll60k',
+    'wavlm': 'microsoft/wavlm-large',
 }
 
 
-class S3PRLExtractorWrapper:
+class TransformersExtractorWrapper:
     """
-    Wraps s3prl upstream models to provide the same .generate() API
-    as funasr's emotion2vec, so it is compatible with AudioFeatureDataset.
+    Wraps HuggingFace transformers models (HuBERT, WavLM) to provide the
+    same .generate() API as funasr's emotion2vec.
 
     Usage:
-        extractor = S3PRLExtractorWrapper('hubert_large_ll60k', device='cuda')
-        result = extractor.generate(audio_path, output_dir=None, granularity="frame", extract_embedding=True)
+        extractor = TransformersExtractorWrapper('hubert', device='cuda')
+        result = extractor.generate(audio_path)
         feats = result[0]['feats']  # numpy array (T, D)
     """
 
-    def __init__(self, upstream_name: str, device: str = 'cuda'):
-        self.upstream_name = upstream_name
+    def __init__(self, ssl_model: str, device: str = 'cuda'):
+        from transformers import AutoModel as HFAutoModel, AutoFeatureExtractor
+
+        self.ssl_model = ssl_model
         self.device = device
+        model_name = SSL_HF_MODELS[ssl_model]
 
-        try:
-            from s3prl.nn import S3PRLUpstream
-        except ImportError:
-            raise ImportError(
-                "s3prl is not installed. Run: pip install s3prl\n"
-                "Or see: https://github.com/s3prl/s3prl"
-            )
-
-        logger.info(f"Loading s3prl model: {upstream_name}")
-        self.model = S3PRLUpstream(upstream_name).to(device)
+        logger.info(f"Loading HuggingFace model: {model_name}")
+        self.model = HFAutoModel.from_pretrained(model_name).to(device)
         self.model.eval()
 
-        # Determine feature dimension via dummy forward
-        with torch.no_grad():
-            dummy_wav = torch.randn(1, 16000).to(device)
-            dummy_len = torch.LongTensor([16000]).to(device)
-            hidden_states, output_lens = self.model(dummy_wav, dummy_len)
-            self._feature_dim = hidden_states[-1].shape[-1]
+        self._feature_dim = self.model.config.hidden_size
+        self._num_layers = self.model.config.num_hidden_layers
 
-        logger.info(f"s3prl model loaded: {upstream_name} "
-                     f"(dim={self._feature_dim}, layers={len(hidden_states)})")
+        logger.info(f"Model loaded: {model_name} "
+                     f"(dim={self._feature_dim}, layers={self._num_layers})")
 
     @property
     def feature_dim(self) -> int:
@@ -162,11 +147,10 @@ class S3PRLExtractorWrapper:
             raise FileNotFoundError(f"Audio file not found: {audio_path}")
 
         wav = self._load_audio(str(audio_path)).to(self.device)
-        wav_len = torch.LongTensor([wav.shape[1]]).to(self.device)
 
         with torch.no_grad():
-            hidden_states, output_lens = self.model(wav, wav_len)
-            features = hidden_states[-1].squeeze(0)  # (T, D)
+            outputs = self.model(wav, output_hidden_states=True)
+            features = outputs.last_hidden_state.squeeze(0)  # (T, D)
 
         return features.cpu().numpy()
 
@@ -174,15 +158,14 @@ class S3PRLExtractorWrapper:
         """
         Mimic funasr's .generate() API for compatibility with AudioFeatureDataset.
 
-        Returns a list with one dict containing 'feats' key (numpy array of shape (T, D)).
-        Extra kwargs (output_dir, granularity, extract_embedding) are accepted but ignored.
+        Returns a list with one dict containing 'feats' key (numpy array (T, D)).
         """
         feats = self.extract(audio_path)
         return [{'feats': feats}]
 
 
 # ============================================================
-# Factory function  (from ssl_feature_utils.py L117-153)
+# Factory function
 # ============================================================
 
 def get_ssl_extractor(ssl_model: str, device: str = 'cuda'):
@@ -202,9 +185,8 @@ def get_ssl_extractor(ssl_model: str, device: str = 'cuda'):
     """
     if ssl_model == 'e2v':
         return get_emotion2vec_extractor()
-    elif ssl_model in SSL_TO_S3PRL:
-        upstream_name = SSL_TO_S3PRL[ssl_model]
-        return S3PRLExtractorWrapper(upstream_name, device=device)
+    elif ssl_model in SSL_HF_MODELS:
+        return TransformersExtractorWrapper(ssl_model, device=device)
     else:
         raise ValueError(
             f"Unknown SSL model: {ssl_model}. "
