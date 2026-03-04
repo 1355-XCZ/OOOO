@@ -42,8 +42,8 @@ mkdir -p "${LOG_DIR}"
 submit() {
     local desc="$1"; shift
     if [[ "${DRY_RUN}" == true ]]; then
-        echo "  [DRY] $desc"
-        echo "        sbatch $*"
+        echo "  [DRY] $desc" >&2
+        echo "        sbatch $*" >&2
         echo "DRY_${RANDOM}"
         return
     fi
@@ -51,7 +51,7 @@ submit() {
     out=$(sbatch "$@" 2>&1)
     local job_id
     job_id=$(echo "${out}" | grep -oP '\d+$')
-    echo "  [SUBMITTED] ${desc}  ->  Job ${job_id}"
+    echo "  [SUBMITTED] ${desc}  ->  Job ${job_id}" >&2
     echo "${job_id}"
 }
 
