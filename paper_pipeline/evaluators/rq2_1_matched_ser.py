@@ -48,7 +48,7 @@ from core.config import (
     E2V_LABELS, E2V_HEAD_PATH, CODEBOOK_DIR, SPLITS_DIR, RESULTS_DIR,
 )
 from core.features import get_ssl_extractor, extract_features
-from core.quantize import load_codebook, compute_similarity, EncoderDecoderRVQ
+from core.quantize import load_codebook, compute_similarity
 from core.classify import load_e2v_head, load_custom_head
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
@@ -93,17 +93,12 @@ def _quantize_and_classify_layer(
     e2v_head,
     valid_indices: List[int],
     valid_e2v_labels: List[str],
-    is_enc_dec: bool,
 ) -> Tuple[str, torch.Tensor]:
     """Accumulate layer reconstruction and return predicted label + updated partial."""
     layer_idx = indices[:, :, layer - 1]
     cb_weights = model.rvq.layers[layer - 1]._codebook.embed[0]
     partial = partial + cb_weights[layer_idx]
-
-    if is_enc_dec:
-        quantized = model.decoder(partial).squeeze(0)
-    else:
-        quantized = partial.squeeze(0)
+    quantized = partial.squeeze(0)
 
     q_mean = quantized.mean(dim=0).unsqueeze(0)
     logits = e2v_head(q_mean)
@@ -124,7 +119,6 @@ def evaluate_codebook_on_samples(
     desc: str = "",
 ) -> Dict[int, List[Tuple[str, str]]]:
     """Evaluate a single codebook on a list of (features, true_label) samples."""
-    is_enc_dec = isinstance(model, EncoderDecoderRVQ)
     layer_pairs: Dict[int, List[Tuple[str, str]]] = defaultdict(list)
 
     for features, true_label in tqdm(cached_samples, desc=desc, leave=False):
@@ -132,18 +126,13 @@ def evaluate_codebook_on_samples(
         feat_input = orig.unsqueeze(0) if orig.dim() == 2 else orig
 
         with torch.no_grad():
-            if is_enc_dec:
-                encoded = model.encoder(feat_input)
-                _, indices, _ = model.rvq(encoded)
-                partial = torch.zeros_like(encoded)
-            else:
-                _, indices, _, _ = model(feat_input)
-                partial = torch.zeros_like(feat_input)
+            _, indices, _, _ = model(feat_input)
+            partial = torch.zeros_like(feat_input)
 
             for layer in range(1, num_layers + 1):
                 pred_label, partial = _quantize_and_classify_layer(
                     model, orig, layer, partial, indices,
-                    e2v_head, valid_indices, valid_e2v_labels, is_enc_dec,
+                    e2v_head, valid_indices, valid_e2v_labels,
                 )
                 layer_pairs[layer].append((true_label, pred_label))
 

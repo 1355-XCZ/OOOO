@@ -22,9 +22,7 @@ from torch.utils.data import Dataset, DataLoader
 from tqdm import tqdm
 import numpy as np
 
-from .standard_rvq_official import (
-    StandardRVQOfficial, StandardRVQConfig, EncoderDecoderRVQ,
-)
+from .standard_rvq_official import StandardRVQOfficial, StandardRVQConfig
 from configs.constants import GLOBAL_SEED
 from configs.dataset_config import RVQConfig, TrainingConfig
 
@@ -159,10 +157,12 @@ def train_codebook(
     rvq_config: RVQConfig,
     training_config: TrainingConfig,
     codebook_name: str = "balanced",
-    model_type: str = "standard",
     extra_metadata: Optional[Dict[str, Any]] = None,
 ) -> float:
-    """Train a single RVQ codebook.
+    """Train a single EMA-based RVQ codebook.
+
+    Codebook entries are updated via exponential moving average during
+    forward passes. No gradient-based optimization is used for the codebook.
 
     Args:
         train_files:     List of audio file paths for training
@@ -172,7 +172,6 @@ def train_codebook(
         rvq_config:      RVQ architecture config
         training_config: Training hyperparameters
         codebook_name:   Name to store in checkpoint metadata
-        model_type:      'standard' or 'encoder_decoder'
         extra_metadata:  Optional dict merged into saved checkpoint (e.g. for mixed codebooks)
 
     Returns:
@@ -181,7 +180,6 @@ def train_codebook(
     device = torch.device(training_config.device if torch.cuda.is_available() else 'cpu')
     logger.info(f"Training on device: {device}")
 
-    # Create datasets
     train_dataset = AudioFeatureDataset(train_files, extractor, feature_dim=rvq_config.feature_dim)
     val_dataset = AudioFeatureDataset(val_files, extractor, feature_dim=rvq_config.feature_dim)
 
@@ -203,8 +201,8 @@ def train_codebook(
         pin_memory=True
     )
 
-    # Create RVQ model
-    logger.info(f"Creating RVQ model: {rvq_config.num_layers} layers, {rvq_config.codebook_size} codes, type={model_type}")
+    logger.info(f"Creating RVQ model: {rvq_config.num_layers} layers, "
+                f"{rvq_config.codebook_size} codes (EMA, decay={StandardRVQConfig.decay})")
 
     config = StandardRVQConfig(
         feature_dim=rvq_config.feature_dim,
@@ -212,13 +210,8 @@ def train_codebook(
         codebook_size=rvq_config.codebook_size,
         use_cosine_sim=rvq_config.use_cosine_sim
     )
+    model = StandardRVQOfficial(config).to(device)
 
-    if model_type == 'encoder_decoder':
-        model = EncoderDecoderRVQ(config).to(device)
-    else:
-        model = StandardRVQOfficial(config).to(device)
-
-    # Initialize codebook (pass valid_mask to avoid padding contamination)
     logger.info("Initializing codebook with first batch...")
     with torch.no_grad():
         for batch in train_loader:
@@ -231,27 +224,9 @@ def train_codebook(
             valid_mask = t_idx < lengths.unsqueeze(1)
             _ = model(features, valid_mask=valid_mask)
             break
-
     logger.info("Codebook initialized")
 
-    # Check trainable parameters
-    learnable_params = [p for p in model.parameters() if p.requires_grad]
-    n_params = sum(p.numel() for p in learnable_params)
-    logger.info(f"Trainable parameters: {n_params}")
-
-    # Optimizer
-    if n_params > 0:
-        if model_type == 'encoder_decoder':
-            optimizer = torch.optim.AdamW(learnable_params, lr=training_config.learning_rate)
-            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=training_config.num_epochs)
-        else:
-            optimizer = torch.optim.Adam(learnable_params, lr=training_config.learning_rate)
-            scheduler = None
-    else:
-        optimizer = None
-        scheduler = None
-
-    # Training loop
+    # Training loop — EMA codebook updates happen inside model.forward()
     best_val_loss = float('inf')
     best_train_loss = float('inf')
     patience_counter = 0
@@ -272,7 +247,7 @@ def train_codebook(
                 'codebook_size': rvq_config.codebook_size,
                 'use_cosine_sim': rvq_config.use_cosine_sim,
             },
-            'model_type': model_type,
+            'model_type': 'standard',
             'epoch': epoch,
             'val_loss': loss_value,
             'codebook_name': codebook_name,
@@ -283,7 +258,6 @@ def train_codebook(
         logger.info(f"Saved best model to {output_path}")
 
     for epoch in range(training_config.num_epochs):
-        # Train
         model.train()
         train_losses = []
 
@@ -300,31 +274,16 @@ def train_codebook(
             valid_mask = t_idx < lengths.unsqueeze(1)
             mask = valid_mask.float().unsqueeze(-1)
 
-            # Forward pass
             reconstructed, indices, commit_loss, stats = model(features, valid_mask=valid_mask)
 
-            # Compute reconstruction loss
             mse_num = ((reconstructed - features) ** 2 * mask).sum()
             mse_den = (mask.sum() * D).clamp_min(1.0)
             recon_loss = mse_num / mse_den
 
-            # Total loss
-            loss = recon_loss + commit_loss.mean() * rvq_config.commitment_weight
-
-            # Backward pass
-            if optimizer is not None:
-                optimizer.zero_grad()
-                loss.backward()
-                torch.nn.utils.clip_grad_norm_(learnable_params, 1.0)
-                optimizer.step()
-
-            train_losses.append(loss.item())
-            pbar.set_postfix({'loss': f'{loss.item():.4f}'})
+            train_losses.append(recon_loss.item())
+            pbar.set_postfix({'loss': f'{recon_loss.item():.4f}'})
 
         avg_train_loss = np.mean(train_losses)
-
-        if scheduler is not None:
-            scheduler.step()
 
         # Validation
         model.eval()
@@ -348,16 +307,12 @@ def train_codebook(
                 mse_num = ((reconstructed - features) ** 2 * mask).sum()
                 mse_den = (mask.sum() * D).clamp_min(1.0)
                 recon_loss = mse_num / mse_den
-
-                loss = recon_loss + commit_loss.mean() * rvq_config.commitment_weight
-                val_losses.append(loss.item())
+                val_losses.append(recon_loss.item())
 
         avg_val_loss = np.mean(val_losses) if val_losses else float('inf')
 
         logger.info(f"Epoch {epoch+1}: train_loss={avg_train_loss:.4f}, val_loss={avg_val_loss:.4f}")
 
-        # Save best model: prefer val_loss, fall back to train_loss when val set is empty
-        # Early stopping: stop after `patience` consecutive epochs without min_delta improvement
         if has_val_data:
             if avg_val_loss < best_val_loss - min_delta:
                 best_val_loss = avg_val_loss

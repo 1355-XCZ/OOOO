@@ -46,8 +46,6 @@ def main():
     parser.add_argument('--learning-rate', type=float, default=DEFAULT_LEARNING_RATE)
     parser.add_argument('--num-layers', type=int, default=32, help='RVQ layers')
     parser.add_argument('--codebook-size', type=int, default=2, help='Codes per layer')
-    parser.add_argument('--model-type', type=str, default='standard',
-                        choices=['standard', 'encoder_decoder'])
     parser.add_argument('--patience', type=int, default=DEFAULT_PATIENCE,
                         help='Early stopping patience (epochs without improvement)')
     parser.add_argument('--min-delta', type=float, default=DEFAULT_MIN_DELTA,
@@ -139,7 +137,6 @@ def main():
         rvq_config=rvq_config,
         training_config=training_config,
         codebook_name=f"biased_{args.emotion}",
-        model_type=args.model_type,
     )
 
     logger.info("=" * 60)

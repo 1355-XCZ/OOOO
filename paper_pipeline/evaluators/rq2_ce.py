@@ -48,7 +48,7 @@ from core.config import (
     set_seed,
 )
 from core.features import get_ssl_extractor, extract_features
-from core.quantize import load_codebook, EncoderDecoderRVQ
+from core.quantize import load_codebook
 from core.classify import load_e2v_head, load_custom_head
 
 logging.basicConfig(level=logging.INFO,
@@ -111,16 +111,12 @@ def top2_set_match(y: np.ndarray, p: np.ndarray) -> int:
     return 1 if gt_top2 == pred_top2 else 0
 
 
-def _get_probs_at_layer(model, layer, partial, indices, head, is_enc_dec):
+def _get_probs_at_layer(model, layer, partial, indices, head):
     """Accumulate one RVQ layer, return 4-class softmax probs and updated partial."""
     layer_idx = indices[:, :, layer - 1]
     cb_weights = model.rvq.layers[layer - 1]._codebook.embed[0]
     partial = partial + cb_weights[layer_idx]
-
-    if is_enc_dec:
-        quantized = model.decoder(partial).squeeze(0)
-    else:
-        quantized = partial.squeeze(0)
+    quantized = partial.squeeze(0)
 
     q_mean = quantized.mean(dim=0).unsqueeze(0)
     logits = head(q_mean)
@@ -141,7 +137,6 @@ def evaluate_ce_on_samples(model, cached_samples, head, num_layers, device,
         layer_ces: {layer: [ce_value, ...]}
         sample_probs: [{layer: probs_np}, ...] per sample (only if save_sample_probs)
     """
-    is_enc_dec = isinstance(model, EncoderDecoderRVQ)
     layer_ces: Dict[int, List[float]] = defaultdict(list)
     sample_probs = [] if save_sample_probs else None
 
@@ -151,17 +146,12 @@ def evaluate_ce_on_samples(model, cached_samples, head, num_layers, device,
         per_layer_p = {} if save_sample_probs else None
 
         with torch.no_grad():
-            if is_enc_dec:
-                encoded = model.encoder(feat_input)
-                _, indices, _ = model.rvq(encoded)
-                partial = torch.zeros_like(encoded)
-            else:
-                _, indices, _, _ = model(feat_input)
-                partial = torch.zeros_like(feat_input)
+            _, indices, _, _ = model(feat_input)
+            partial = torch.zeros_like(feat_input)
 
             for layer in range(1, num_layers + 1):
                 probs, partial = _get_probs_at_layer(
-                    model, layer, partial, indices, head, is_enc_dec)
+                    model, layer, partial, indices, head)
                 ce = cross_entropy(y, probs)
                 layer_ces[layer].append(ce)
                 if save_sample_probs:

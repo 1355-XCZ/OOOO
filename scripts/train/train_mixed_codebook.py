@@ -101,9 +101,6 @@ def main():
     parser.add_argument('--learning-rate', type=float, default=DEFAULT_LEARNING_RATE)
     parser.add_argument('--num-layers', type=int, default=32, help='RVQ layers')
     parser.add_argument('--codebook-size', type=int, default=2, help='Codes per layer')
-    parser.add_argument('--model-type', type=str, default='standard',
-                        choices=['standard', 'encoder_decoder'],
-                        help='Model architecture: standard (direct RVQ) or encoder_decoder (encoder-RVQ-decoder)')
     parser.add_argument('--device', type=str, default='cuda')
     parser.add_argument('--seed', type=int, default=GLOBAL_SEED)
     args = parser.parse_args()
@@ -215,7 +212,6 @@ def main():
         training_config=training_config,
         codebook_name=codebook_name,
         extra_metadata=extra_metadata,
-        model_type=args.model_type,
     )
 
     logger.info("=" * 60)

@@ -39,7 +39,7 @@ sys.path.insert(0, str(EXP_ROOT))
 from configs.dataset_config import DATASET_CONFIGS
 from core.config import CODEBOOK_DIR, SPLITS_DIR, RESULTS_DIR
 from core.features import get_ssl_extractor, extract_features, get_codebook_dir
-from core.quantize import load_codebook, EncoderDecoderRVQ
+from core.quantize import load_codebook
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
 logger = logging.getLogger(__name__)
@@ -92,18 +92,13 @@ def collect_token_counts(
 ) -> Dict[int, List[int]]:
     """Per-layer token counts across all samples."""
     counts = {l: [0] * codebook_size for l in range(1, num_layers + 1)}
-    is_enc_dec = isinstance(codebook, EncoderDecoderRVQ)
 
     for features in tqdm(cached_features, desc=desc, leave=False):
         orig = features.to(device)
         feat_input = orig.unsqueeze(0) if orig.dim() == 2 else orig
 
         with torch.no_grad():
-            if is_enc_dec:
-                encoded = codebook.encoder(feat_input)
-                _, indices, _ = codebook.rvq(encoded)
-            else:
-                _, indices, _, _ = codebook(feat_input)
+            _, indices, _, _ = codebook(feat_input)
 
             for layer in range(1, num_layers + 1):
                 layer_indices = indices[:, :, layer - 1].flatten()
