@@ -43,6 +43,7 @@ python -m paper_pipeline.evaluators.rq2_ce \
     --codebook-source "${SOURCE}" \
     --version va \
     --device cuda \
-    --save-samples
+    --save-samples \
+    --include-ratio
 
 echo "Done: ${SSL_MODEL} / ${SOURCE} at $(date)"
